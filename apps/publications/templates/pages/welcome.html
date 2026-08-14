@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}Publica en todas tus redes a la vez{% endblock %}
+
+{% block meta %}
+<meta name="description"
+    content="Propaga es una plataforma que publica tus videos en YouTube, Facebook, Instagram, TikTok y X al mismo tiempo, con títulos, descripciones y hashtags generados por IA.">
+{% endblock %}
+
+{% block extra_head %}
+{% comment %} El landing conserva su identidad propia y su set de iconos (Phosphor). El
+   panel usa Material Symbols; por eso Phosphor se carga SOLO aquí y no en
+   base.html — un solo set de iconos por superficie. {% endcomment %}
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+    /* ============ Mockup flotante del dashboard ============ */
+    .hero-mock {
+        transform: perspective(1200px) rotateX(14deg);
+        transform-origin: top center;
+        animation: mock-rise 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+        opacity: 0;
+    }
+
+    @keyframes mock-rise {
+        to { transform: perspective(1200px) rotateX(4deg); opacity: 1; }
+    }
+
+    .mock-bar {
+        border-radius: 6px 6px 0 0;
+        background: linear-gradient(to top, var(--brand), rgba(16, 185, 129, 0.35));
+        animation: bar-grow 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        transform: scaleY(0);
+        transform-origin: bottom;
+    }
+
+    @keyframes bar-grow {
+        to { transform: scaleY(1); }
+    }
+
+    /* Logos de plataformas */
+    .platform-logo {
+        transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+        opacity: 0.75;
+    }
+
+    .platform-logo:hover {
+        transform: translateY(-3px) scale(1.06);
+        opacity: 1;
+    }
+
+    /* Acordeón FAQ */
+    .faq-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s var(--ease);
+    }
+
+    .faq-item.active .faq-content {
+        max-height: 200px;
+    }
+
+    .faq-icon {
+        transition: transform 0.3s var(--ease);
+    }
+
+    .faq-item.active .faq-icon {
+        transform: rotate(180deg);
+    }
+
+    /* CTA con gradiente animado */
+    .cta-panel {
+        background: linear-gradient(120deg, #064e3b, #065f46, #0e7490, #064e3b);
+        background-size: 300% 300%;
+        animation: cta-shift 12s ease infinite;
+    }
+
+    @keyframes cta-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .cta-panel, .mock-bar, .hero-mock { animation: none !important; }
+        .hero-mock { opacity: 1; transform: none; }
+        .mock-bar { transform: none; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="bg-tech-grid"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<nav class="nav-island" id="nav-island">
+    <a href="/" class="flex items-center gap-2 pl-2 pr-3">
+        <img src="{% static 'publications/logo.png' %}" alt="Propaga Logo"
+            class="h-8 w-8 rounded-full shadow-sm object-cover">
+        <span class="font-display font-bold tracking-tight hidden sm:block">PROPAGA</span>
+    </a>
+
+    <div class="hidden md:flex items-center">
+        <a href="#que-es" class="nav-pill">Qué es</a>
+        <a href="#features" class="nav-pill">Características</a>
+        <a href="#use-cases" class="nav-pill">Usos</a>
+        <a href="#faq" class="nav-pill">FAQ</a>
+    </div>
+
+    <span class="nav-divider hidden sm:block"></span>
+
+    {% include "partials/_theme_toggle.html" %}
+
+    <a href="{% url 'account_login' %}" class="nav-pill hidden sm:inline-flex">Ingresar</a>
+    <a href="{% url 'account_login' %}" class="nav-cta btn-shine">
+        Comenzar <span class="hidden sm:inline">Gratis</span>
+        <i class="ph ph-arrow-right"></i>
+    </a>
+</nav>
+
+<section class="pt-40 md:pt-44 pb-10 px-6 relative overflow-hidden">
+    <div class="max-w-5xl mx-auto text-center">
+
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full card mb-8 fade-in-up" style="border-radius: 999px;">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-2);">Propaga · Motor v2.0 Online</span>
+        </div>
+
+        {# El h1 debe nombrar "Propaga" igual que la pantalla de consentimiento de Google #}
+        <h1 class="font-display font-bold text-5xl md:text-7xl lg:text-8xl tracking-tighter mb-8 leading-[1.05] fade-in-up delay-100">
+            Propaga automatiza tu <br class="hidden md:block">
+            <span class="gradient-text">imperio digital.</span>
+        </h1>
+
+        <p class="text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed fade-in-up delay-200" style="color: var(--text-2);">
+            <strong>Propaga</strong> es la plataforma que publica tus videos en YouTube, Facebook, Instagram,
+            TikTok y X al mismo tiempo. Subes el video, la IA escribe el título, la descripción y los hashtags,
+            y tú apruebas antes de publicar.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 fade-in-up delay-300">
+            <a href="{% url 'account_login' %}"
+                class="btn btn-primary btn-shine w-full sm:w-auto !px-8 !py-4 !text-base shadow-xl shadow-brand-500/25">
+                <span>Crear Cuenta Gratis</span>
+                <i class="ph ph-arrow-right font-bold"></i>
+            </a>
+            <a href="#features" class="btn btn-secondary w-full sm:w-auto !px-8 !py-4 !text-base">
+                <i class="ph ph-play-circle text-xl"></i>
+                Ver Demo
+            </a>
+        </div>
+
+        <!-- Mockup flotante del panel -->
+        <div class="hero-mock mt-16 md:mt-20 mx-auto max-w-3xl card rounded-2xl p-4 sm:p-6 text-left"
+            style="box-shadow: var(--shadow-lg);">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="w-3 h-3 rounded-full bg-red-400"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                <span class="w-3 h-3 rounded-full bg-green-400"></span>
+                <span class="ml-3 text-xs font-semibold uppercase tracking-widest" style="color: var(--text-3);">propaga · workspace</span>
+                <span class="ml-auto badge badge-success !text-[10px] sm:!text-xs">
+                    <span class="dot dot-success"></span> Publicado en 5 redes
+                </span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 sm:gap-4">
+                <div class="rounded-xl p-3 sm:p-4" style="background: var(--surface-2); border: 1px solid var(--border);">
+                    <div class="text-[10px] sm:text-xs font-semibold mb-1" style="color: var(--text-3);">ALCANCE</div>
+                    <div class="font-display font-bold text-lg sm:text-2xl gradient-text">+312%</div>
+                </div>
+                <div class="rounded-xl p-3 sm:p-4" style="background: var(--surface-2); border: 1px solid var(--border);">
+                    <div class="text-[10px] sm:text-xs font-semibold mb-1" style="color: var(--text-3);">TIEMPO AHORRADO</div>
+                    <div class="font-display font-bold text-lg sm:text-2xl">15h<span class="text-sm">/sem</span></div>
+                </div>
+                <div class="rounded-xl p-3 sm:p-4" style="background: var(--surface-2); border: 1px solid var(--border);">
+                    <div class="text-[10px] sm:text-xs font-semibold mb-1" style="color: var(--text-3);">REDES</div>
+                    <div class="flex items-center gap-1.5 mt-1">
+                        <i class="ph-fill ph-youtube-logo text-lg sm:text-xl text-[#FF0000]"></i>
+                        <i class="ph-fill ph-tiktok-logo text-lg sm:text-xl"></i>
+                        <i class="ph-fill ph-instagram-logo text-lg sm:text-xl text-[#E4405F]"></i>
+                        <i class="ph-fill ph-facebook-logo text-lg sm:text-xl text-[#1877F2]"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 sm:mt-4 rounded-xl p-3 sm:p-4 flex items-end gap-2 h-24 sm:h-32"
+                style="background: var(--surface-2); border: 1px solid var(--border);">
+                <div class="mock-bar flex-1 h-[35%]" style="animation-delay: .5s;"></div>
+                <div class="mock-bar flex-1 h-[55%]" style="animation-delay: .6s;"></div>
+                <div class="mock-bar flex-1 h-[45%]" style="animation-delay: .7s;"></div>
+                <div class="mock-bar flex-1 h-[70%]" style="animation-delay: .8s;"></div>
+                <div class="mock-bar flex-1 h-[60%]" style="animation-delay: .9s;"></div>
+                <div class="mock-bar flex-1 h-[85%]" style="animation-delay: 1s;"></div>
+                <div class="mock-bar flex-1 h-full" style="animation-delay: 1.1s;"></div>
+            </div>
+        </div>
+
+        <div class="mt-16 pt-10 reveal" style="border-top: 1px solid var(--border);">
+            <p class="text-xs font-semibold uppercase tracking-widest mb-8" style="color: var(--text-3);">
+                Funciona perfectamente con</p>
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16">
+                <div class="platform-logo flex items-center gap-2"><i class="ph-fill ph-youtube-logo text-3xl text-[#FF0000]"></i> <span
+                        class="font-bold text-lg hidden sm:block">YouTube</span></div>
+                <div class="platform-logo flex items-center gap-2"><i class="ph-fill ph-tiktok-logo text-3xl"></i> <span
+                        class="font-bold text-lg hidden sm:block">TikTok</span></div>
+                <div class="platform-logo flex items-center gap-2"><i class="ph-fill ph-instagram-logo text-3xl text-[#E4405F]"></i> <span
+                        class="font-bold text-lg hidden sm:block">Instagram</span></div>
+                <div class="platform-logo flex items-center gap-2"><i class="ph-fill ph-facebook-logo text-3xl text-[#1877F2]"></i> <span
+                        class="font-bold text-lg hidden sm:block">Facebook</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Descripción del propósito de la app. Requerida por la verificación de marca de
+     Google OAuth: la página principal debe explicar qué hace la app y nombrarla
+     igual que en la pantalla de consentimiento. No borrar sin reemplazo equivalente. -->
+{# Sin .reveal a propósito: debe verse siempre, aun sin JS ni scroll #}
+<section id="que-es" class="py-20 px-6">
+    <div class="max-w-3xl mx-auto">
+        <span class="badge badge-brand mb-4">Qué es</span>
+        <h2 class="font-display font-bold text-3xl md:text-4xl tracking-tight mb-6">¿Qué es Propaga?</h2>
+        <div class="prose-doc" style="color: var(--text-2);">
+            <p>
+                <strong>Propaga</strong> es una plataforma web de automatización de publicaciones en redes
+                sociales. Subes un video (por enlace o archivo), Propaga lo transcribe con inteligencia
+                artificial, genera el título, la descripción y los hashtags, y tras tu aprobación lo publica
+                simultáneamente en <strong>YouTube, Facebook, Instagram, TikTok y X (Twitter)</strong>.
+            </p>
+            <p>
+                Está pensada para creadores de contenido, agencias y equipos de marketing que publican el
+                mismo video en varias redes y pierden horas repitiendo el proceso manualmente en cada una.
+            </p>
+            <p>
+                <strong>Sobre el inicio de sesión con Google:</strong> Propaga usa tu cuenta de Google
+                únicamente para crear e identificar tu cuenta de usuario. Accedemos solo a tu nombre, tu
+                dirección de correo y tu foto de perfil. No leemos tu correo, tus contactos ni tus archivos.
+                Si además conectas YouTube para publicar, se te pedirá ese permiso por separado y solo se
+                usa para subir los videos que tú apruebes.
+            </p>
+            <p>
+                Consulta nuestra <a href="{% url 'publications:privacy_policy' %}">Política de Privacidad</a>
+                y las <a href="{% url 'publications:terms_of_service' %}">Condiciones del Servicio</a>.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="py-24 px-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-16 md:text-center max-w-3xl mx-auto reveal">
+            <span class="badge badge-brand mb-4">Características</span>
+            <h2 class="font-display font-bold text-3xl md:text-5xl tracking-tight mb-6">Todo lo que necesitas para escalar</h2>
+            <p class="text-lg" style="color: var(--text-2);">Una suite completa de herramientas diseñadas para
+                eliminar la fricción entre crear y publicar.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+            <div class="md:col-span-2 lg:col-span-2 row-span-2 card card-hover glow-card rounded-3xl p-8 relative overflow-hidden group reveal">
+                <div class="relative z-10">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-500 text-white flex items-center justify-center mb-6 shadow-lg shadow-brand-500/30">
+                        <i class="ph ph-chart-line-up text-2xl"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-2xl mb-3">Panel de Control Central</h3>
+                    <p class="max-w-sm leading-relaxed" style="color: var(--text-2);">
+                        Visualiza el rendimiento de todas tus redes en un solo lugar. Programa, edita y monitorea
+                        sin cambiar de pestañas.
+                    </p>
+                </div>
+                <div class="absolute right-0 bottom-0 w-3/4 h-3/4 translate-x-12 translate-y-12 rounded-tl-2xl p-4 group-hover:translate-x-8 group-hover:translate-y-8 transition-transform duration-500"
+                    style="background: var(--surface); box-shadow: var(--shadow-lg); border-top: 1px solid var(--border); border-left: 1px solid var(--border);">
+                    <div class="flex gap-3 mb-4">
+                        <div class="h-24 w-1/2 rounded-lg bg-gradient-to-br from-brand-500/15 to-transparent" style="border: 1px solid var(--border);"></div>
+                        <div class="h-24 w-1/2 rounded-lg bg-gradient-to-br from-cyan-500/15 to-transparent" style="border: 1px solid var(--border);"></div>
+                    </div>
+                    <div class="h-full rounded-lg bg-gradient-to-br from-violet-500/10 to-transparent" style="border: 1px solid var(--border);"></div>
+                </div>
+            </div>
+
+            <div class="md:col-span-1 lg:col-span-2 card card-hover glow-card rounded-3xl p-8 reveal">
+                <div class="flex items-start justify-between mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <i class="ph ph-magic-wand text-2xl"></i>
+                    </div>
+                    <span class="badge badge-violet">IA Powered</span>
+                </div>
+                <h3 class="font-display font-bold text-xl mb-2">Copywriting Inteligente</h3>
+                <p class="text-sm" style="color: var(--text-2);">Nuestra IA analiza tu video y escribe títulos
+                    virales, descripciones persuasivas y selecciona hashtags trending.</p>
+            </div>
+
+            <div class="md:col-span-1 card card-hover glow-card rounded-3xl p-8 reveal">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center mb-6 shadow-lg shadow-amber-500/30">
+                    <i class="ph ph-lightning text-2xl"></i>
+                </div>
+                <h3 class="font-display font-bold text-xl mb-2">Ultrarrápido</h3>
+                <p class="text-sm" style="color: var(--text-2);">Motor optimizado para procesar y subir videos
+                    4K en segundos.</p>
+            </div>
+
+            <div class="md:col-span-1 card card-hover glow-card rounded-3xl p-8 reveal">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 text-white flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30">
+                    <i class="ph ph-share-network text-2xl"></i>
+                </div>
+                <h3 class="font-display font-bold text-xl mb-2">Omnicanal</h3>
+                <p class="text-sm" style="color: var(--text-2);">Publica en YouTube Shorts, TikTok, Reels y X
+                    simultáneamente.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section id="use-cases" class="py-24 px-6 relative" style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16 reveal">
+            <span class="badge badge-info mb-4">Casos de uso</span>
+            <h2 class="font-display font-bold text-3xl md:text-4xl tracking-tight">
+                Hecho para creadores modernos</h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="card card-hover glow-card rounded-2xl p-8 group reveal" style="background: var(--surface-2);">
+                <div class="mb-6 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300 bg-gradient-to-br from-rose-500/15 to-orange-500/15">
+                    🎙️</div>
+                <h3 class="text-xl font-bold mb-3">Podcasters</h3>
+                <p class="text-sm leading-relaxed" style="color: var(--text-2);">Convierte tus episodios largos
+                    de YouTube en docenas de clips cortos (Shorts/Reels) automáticamente para atraer nueva
+                    audiencia.</p>
+            </div>
+
+            <div class="card card-hover glow-card rounded-2xl p-8 group reveal" style="background: var(--surface-2);">
+                <div class="mb-6 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 bg-gradient-to-br from-emerald-500/15 to-cyan-500/15">
+                    🛍️</div>
+                <h3 class="text-xl font-bold mb-3">E-commerce</h3>
+                <p class="text-sm leading-relaxed" style="color: var(--text-2);">Sube el video de un producto y
+                    dispáralo a todas las redes sociales con copys de venta generados por IA.</p>
+            </div>
+
+            <div class="card card-hover glow-card rounded-2xl p-8 group reveal" style="background: var(--surface-2);">
+                <div class="mb-6 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300 bg-gradient-to-br from-violet-500/15 to-fuchsia-500/15">
+                    🎮</div>
+                <h3 class="text-xl font-bold mb-3">Streamers</h3>
+                <p class="text-sm leading-relaxed" style="color: var(--text-2);">Captura tus mejores momentos
+                    de Twitch y publícalos en TikTok en minutos sin salir de tu setup.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="faq" class="py-24 px-6">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-12 reveal">
+            <span class="badge badge-neutral mb-4">FAQ</span>
+            <h2 class="font-display font-bold text-3xl md:text-4xl tracking-tight">
+                Preguntas Frecuentes</h2>
+        </div>
+
+        <div class="space-y-4">
+            <div class="faq-item card rounded-xl overflow-hidden reveal" style="background: var(--surface-2);">
+                <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none min-h-[44px]"
+                    onclick="toggleFaq(this)">
+                    <span class="font-semibold">¿Necesito tarjeta de crédito para empezar?</span>
+                    <i class="ph ph-caret-down faq-icon" style="color: var(--text-3);"></i>
+                </button>
+                <div class="faq-content" style="background: var(--surface);">
+                    <div class="px-6 pb-6 pt-2 text-sm" style="color: var(--text-2);">
+                        No. Puedes crear una cuenta gratuita y probar las funcionalidades básicas sin compromisos.
+                        Solo pagas cuando necesites escalar.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item card rounded-xl overflow-hidden reveal" style="background: var(--surface-2);">
+                <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none min-h-[44px]"
+                    onclick="toggleFaq(this)">
+                    <span class="font-semibold">¿Es seguro conectar mis redes sociales?</span>
+                    <i class="ph ph-caret-down faq-icon" style="color: var(--text-3);"></i>
+                </button>
+                <div class="faq-content" style="background: var(--surface);">
+                    <div class="px-6 pb-6 pt-2 text-sm" style="color: var(--text-2);">
+                        Absolutamente. Utilizamos las APIs oficiales de YouTube, TikTok y Meta. Nunca almacenamos
+                        tus contraseñas y puedes revocar el acceso en cualquier momento.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item card rounded-xl overflow-hidden reveal" style="background: var(--surface-2);">
+                <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none min-h-[44px]"
+                    onclick="toggleFaq(this)">
+                    <span class="font-semibold">¿Funciona con videos horizontales y verticales?</span>
+                    <i class="ph ph-caret-down faq-icon" style="color: var(--text-3);"></i>
+                </button>
+                <div class="faq-content" style="background: var(--surface);">
+                    <div class="px-6 pb-6 pt-2 text-sm" style="color: var(--text-2);">
+                        Sí. Propaga detecta el formato automáticamente. Si subes un video horizontal a una
+                        plataforma vertical (como TikTok), nuestra IA puede ayudarte a adaptarlo.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-24 px-6 relative">
+    <div class="max-w-5xl mx-auto reveal">
+        <div class="relative rounded-[2.5rem] cta-panel overflow-hidden px-6 py-20 text-center" style="box-shadow: var(--shadow-lg);">
+            <div class="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-brand-400/20 blur-[80px]"></div>
+            <div class="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-cyan-400/20 blur-[80px]"></div>
+
+            <div class="relative z-10">
+                <h2 class="font-display font-bold text-4xl md:text-5xl tracking-tight text-white mb-6">Listo para dominar el algoritmo?</h2>
+                <p class="text-emerald-100/80 text-lg mb-10 max-w-xl mx-auto">Únete a cientos de creadores que ahorran
+                    +15 horas semanales.</p>
+                <a href="{% url 'account_login' %}"
+                    class="btn-shine inline-block bg-white text-emerald-950 font-bold text-lg px-10 py-4 rounded-xl hover:scale-105 transition-all duration-300 relative">
+                    Comenzar Ahora - Gratis
+                </a>
+                <p class="text-emerald-100/60 text-sm mt-6">Configuración en 2 minutos · Sin tarjeta requerida</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="pt-16 pb-8 px-6" style="background: var(--surface); border-top: 1px solid var(--border);">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+
+            <div class="col-span-1 md:col-span-1">
+                <div class="flex items-center gap-2 mb-4">
+                    <img src="{% static 'publications/logo.png' %}" alt="Propaga Logo"
+                        class="h-8 w-8 rounded opacity-90">
+                    <span class="font-bold text-lg">PROPAGA</span>
+                </div>
+                <p class="text-sm leading-relaxed" style="color: var(--text-2);">
+                    La plataforma definitiva para creadores de contenido que valoran su tiempo y su alcance.
+                </p>
+            </div>
+
+            <div>
+                <h4 class="font-bold mb-4 text-sm">Producto</h4>
+                <ul class="space-y-3 text-sm" style="color: var(--text-2);">
+                    <li><a href="#features" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Características</a></li>
+                    <li><a href="#pricing" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Precios</a></li>
+                    <li><a href="{% url 'account_login' %}" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Ingresar</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold mb-4 text-sm">Legal</h4>
+                <ul class="space-y-3 text-sm" style="color: var(--text-2);">
+                    <li><a href="https://propaga.lat/dashboard/privacy-policy/"
+                            class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Política de Privacidad</a></li>
+                    <li><a href="https://propaga.lat/dashboard/terms-of-service/"
+                            class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Términos de Servicio</a></li>
+                    <li><a href="https://propaga.lat/dashboard/data-deletion/"
+                            class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Borrado de Datos</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold mb-4 text-sm">Administración</h4>
+                <ul class="space-y-3 text-sm" style="color: var(--text-2);">
+                    <li>
+                        <a href="{% url 'admin:index' %}"
+                            class="flex items-center gap-2 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                            <i class="ph ph-lock-key"></i> Panel Admin
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="pt-8 flex flex-col md:flex-row justify-between items-center gap-4" style="border-top: 1px solid var(--border);">
+            <p class="text-xs" style="color: var(--text-3);">© 2025 Propaga Inc. Todos los derechos reservados.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors" style="color: var(--text-3);"><i
+                        class="ph-fill ph-twitter-logo text-xl"></i></a>
+                <a href="#" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors" style="color: var(--text-3);"><i
+                        class="ph-fill ph-instagram-logo text-xl"></i></a>
+            </div>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function toggleFaq(button) {
+        const item = button.parentElement;
+        document.querySelectorAll('.faq-item').forEach(i => {
+            if (i !== item) i.classList.remove('active');
+        });
+        item.classList.toggle('active');
+    }
+
+    // Isla al scroll y reveals: manejados globalmente por theme.js
+</script>
+{% endblock %}

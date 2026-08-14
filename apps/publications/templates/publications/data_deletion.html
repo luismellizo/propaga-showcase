@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block head_title %}Eliminación de Datos{% endblock %}
+
+{% block body %}
+<div class="fixed top-4 right-4 z-50">
+    {% include "partials/_theme_toggle.html" %}
+</div>
+
+<div class="py-16 sm:py-20 px-4">
+    <div class="max-w-2xl mx-auto fade-in-up">
+
+        <div class="mb-10">
+            <p class="text-label text-on-surface-muted mb-2">Documento legal</p>
+            <h1 class="text-headline mb-2">Solicitud de Eliminación de Datos</h1>
+            <p class="text-body text-on-surface-variant">Tienes derecho a solicitar la eliminación completa de tus datos.</p>
+        </div>
+
+        <div class="card p-8 md:p-12 prose-doc">
+
+            <section class="text-center">
+                <div class="empty-state__icon mx-auto mb-4 bg-danger-container text-on-danger-container">
+                    <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                </div>
+                <p class="text-body">
+                    De acuerdo con las políticas de privacidad de Facebook, Google y X, tienes el derecho a
+                    solicitar la eliminación completa de tus datos almacenados en nuestros servidores.
+                </p>
+            </section>
+
+            <section>
+                <h2>Cómo proceder:</h2>
+                <ol>
+                    <li>Envía un correo electrónico a <a href="mailto:soporte@propaga.lat"
+                            class="link">soporte@propaga.lat</a> desde la dirección
+                        de correo asociada a tu cuenta.</li>
+                    <li>Usa el asunto: <strong>"Solicitud de baja definitiva - [Tu Usuario]"</strong>.</li>
+                    <li>En el cuerpo del mensaje, confirma explícitamente que deseas eliminar tu cuenta y todos los datos
+                        asociados.</li>
+                </ol>
+            </section>
+
+            <section>
+                <p class="text-body text-on-surface-variant">
+                    Procesaremos tu solicitud en un plazo máximo de 72 horas hábiles. Recibirás una confirmación final
+                    una vez que tus datos hayan sido purgados permanentemente de nuestros sistemas.
+                </p>
+            </section>
+
+        </div>
+
+        <div class="mt-8">
+            <a href="/" class="btn btn-secondary">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_back</span>
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,404 @@
+/* ==========================================================================
+   PROPAGA — Design tokens (Material 3)
+   --------------------------------------------------------------------------
+   ÚNICA fuente de verdad visual. Ningún componente ni template debe escribir
+   un hex: se usa un ROL (`--m3-primary`, `--m3-surface-container`…), nunca un
+   valor. Si hace falta un color que no existe, se agrega el rol aquí.
+
+   Estructura:
+     1. Paletas tonales   (valores crudos — NO usar directamente en componentes)
+     2. Esquema oscuro    (:root — el panel nace en oscuro)
+     3. Esquema claro     (.light-scheme, aplicado por theme.js)
+     4. Forma, tipografía, movimiento, elevación, espaciado, layout
+     5. Alias de compatibilidad con el sistema anterior
+
+   Excepción documentada: los colores de marca de terceros (Facebook, Google,
+   YouTube, X, Instagram, TikTok) viven en `--brand-*` al final. Son logos, no
+   interfaz, y no siguen el tema.
+   ========================================================================== */
+
+:root {
+    /* ======================================================================
+       1. PALETAS TONALES
+       Derivadas del verde de PROPAGA (hue ~162). Los números son tonos HCT:
+       0 = negro, 100 = blanco. No se usan directamente en componentes.
+       ====================================================================== */
+
+    /* Primary — verde de marca */
+    --p-0: #000000;
+    --p-10: #00201A;
+    --p-20: #003830;
+    --p-30: #005143;
+    --p-40: #006C58;
+    --p-50: #00886F;
+    --p-60: #00A587;
+    --p-70: #1FC2A1;
+    --p-80: #4CDFBC;
+    --p-90: #6FFDD8;
+    --p-95: #C6FFEE;
+    --p-99: #F3FFFA;
+    --p-100: #FFFFFF;
+
+    /* Secondary — mismo hue, croma bajo (superficies de acento tranquilas) */
+    --s-10: #0A1F1A;
+    --s-20: #1F352F;
+    --s-30: #354C45;
+    --s-40: #4C645C;
+    --s-50: #647D74;
+    --s-60: #7D978D;
+    --s-70: #97B2A7;
+    --s-80: #B1CEC2;
+    --s-90: #CDEADE;
+    --s-95: #DBF8EC;
+
+    /* Neutral — gris con una gota de verde (M3 tinta el neutro con el origen) */
+    --n-0: #000000;
+    --n-4: #080E0C;
+    --n-6: #0D1411;
+    --n-10: #171D1A;
+    --n-12: #1B211F;
+    --n-17: #252B29;
+    --n-20: #2B322F;
+    --n-22: #303734;
+    --n-24: #353B39;
+    --n-87: #D4DBD7;
+    --n-90: #DDE4E0;
+    --n-92: #E3EAE6;
+    --n-94: #E9F0EC;
+    --n-96: #EFF6F1;
+    --n-98: #F5FBF7;
+    --n-99: #F8FEFA;
+    --n-100: #FFFFFF;
+
+    /* Neutral variant — para contornos y texto secundario */
+    --nv-20: #26302C;
+    --nv-30: #3C4642;
+    --nv-50: #6C7671;
+    --nv-60: #859089;
+    --nv-70: #A0AAA4;
+    --nv-80: #BBC6BF;
+    --nv-90: #D7E2DB;
+
+    /* Error (paleta estándar de M3) */
+    --e-10: #410002;
+    --e-20: #690005;
+    --e-30: #93000A;
+    --e-40: #BA1A1A;
+    --e-80: #FFB4AB;
+    --e-90: #FFDAD6;
+
+    /* Warning — ámbar */
+    --w-10: #261A00;
+    --w-20: #422C00;
+    --w-30: #5F4100;
+    --w-40: #7A5900;
+    --w-80: #F5BE6B;
+    --w-90: #FFDEA8;
+
+    /* Info / tertiary — azul (Google blue) */
+    --t-10: #041E49;
+    --t-20: #0A305F;
+    --t-30: #26477A;
+    --t-40: #0B57D0;
+    --t-80: #A8C8FA;
+    --t-90: #D3E3FD;
+
+    /* Violeta — el estado que pide intervención humana */
+    --v-10: #21005D;
+    --v-20: #381E72;
+    --v-30: #4F378B;
+    --v-40: #6750A4;
+    --v-80: #D0BCFF;
+    --v-90: #EADDFF;
+
+    /* ======================================================================
+       2. ESQUEMA OSCURO (por defecto)
+       ====================================================================== */
+
+    --m3-primary: var(--p-80);
+    --m3-on-primary: var(--p-20);
+    --m3-primary-container: var(--p-30);
+    --m3-on-primary-container: var(--p-90);
+    --m3-inverse-primary: var(--p-40);
+
+    --m3-secondary: var(--s-80);
+    --m3-on-secondary: var(--s-20);
+    --m3-secondary-container: var(--s-30);
+    --m3-on-secondary-container: var(--s-90);
+
+    --m3-tertiary: var(--t-80);
+    --m3-on-tertiary: var(--t-20);
+    --m3-tertiary-container: var(--t-30);
+    --m3-on-tertiary-container: var(--t-90);
+
+    --m3-error: var(--e-80);
+    --m3-on-error: var(--e-20);
+    --m3-error-container: var(--e-30);
+    --m3-on-error-container: var(--e-90);
+
+    --m3-warning: var(--w-80);
+    --m3-on-warning: var(--w-20);
+    --m3-warning-container: var(--w-30);
+    --m3-on-warning-container: var(--w-90);
+
+    --m3-info: var(--t-80);
+    --m3-on-info: var(--t-20);
+    --m3-info-container: var(--t-30);
+    --m3-on-info-container: var(--t-90);
+
+    --m3-violet: var(--v-80);
+    --m3-on-violet: var(--v-20);
+    --m3-violet-container: var(--v-30);
+    --m3-on-violet-container: var(--v-90);
+
+    /* Superficies — la elevación se expresa subiendo el TONO, no con sombra */
+    --m3-surface: var(--n-6);
+    --m3-surface-dim: var(--n-6);
+    --m3-surface-bright: var(--n-24);
+    --m3-surface-container-lowest: var(--n-4);
+    --m3-surface-container-low: var(--n-10);
+    --m3-surface-container: var(--n-12);
+    --m3-surface-container-high: var(--n-17);
+    --m3-surface-container-highest: var(--n-22);
+
+    --m3-on-surface: var(--n-90);
+    --m3-on-surface-variant: var(--nv-80);
+    --m3-on-surface-muted: var(--nv-60);
+
+    --m3-outline: var(--nv-60);
+    --m3-outline-variant: var(--nv-30);
+
+    --m3-inverse-surface: var(--n-90);
+    --m3-inverse-on-surface: var(--n-20);
+
+    --m3-scrim: #000000;
+    --m3-shadow: #000000;
+
+    /* Opacidades de la capa de estado (M3 state layers) */
+    --m3-state-hover: 0.08;
+    --m3-state-focus: 0.10;
+    --m3-state-pressed: 0.10;
+    --m3-state-dragged: 0.16;
+    --m3-state-disabled-content: 0.38;
+    --m3-state-disabled-container: 0.12;
+
+    /* ======================================================================
+       4. FORMA — escala fija. Nada de radios inventados.
+       ====================================================================== */
+    --shape-none: 0px;
+    --shape-xs: 4px;
+    --shape-sm: 8px;
+    --shape-md: 12px;
+    --shape-lg: 16px;
+    --shape-xl: 28px;
+    --shape-full: 999px;
+
+    /* ======================================================================
+       TIPOGRAFÍA — una familia, escala corta, pesos 400 y 500. Y punto.
+       ====================================================================== */
+    --font-sans: 'Roboto Flex', 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    --type-display-size: 40px;
+    --type-display-line: 48px;
+
+    --type-headline-size: 28px;
+    /* título de página */
+    --type-headline-line: 36px;
+
+    --type-title-lg-size: 22px;
+    /* título de sección */
+    --type-title-lg-line: 28px;
+
+    --type-title-size: 16px;
+    --type-title-line: 24px;
+
+    --type-body-lg-size: 16px;
+    --type-body-lg-line: 24px;
+
+    --type-body-size: 14px;
+    --type-body-line: 20px;
+
+    --type-body-sm-size: 12px;
+    --type-body-sm-line: 16px;
+
+    --type-label-lg-size: 14px;
+    --type-label-lg-line: 20px;
+
+    --type-label-size: 12px;
+    --type-label-line: 16px;
+
+    --type-label-sm-size: 11px;
+    --type-label-sm-line: 16px;
+
+    /* ======================================================================
+       MOVIMIENTO — 150–250 ms, easing de M3 (no el de Material 2)
+       ====================================================================== */
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-decelerate: cubic-bezier(0, 0, 0, 1);
+    --ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
+    --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+
+    --dur-short: 150ms;
+    --dur-medium: 200ms;
+    --dur-long: 250ms;
+    --dur-xlong: 400ms;
+
+    /* ======================================================================
+       ELEVACIÓN — solo para lo que FLOTA de verdad (menús, diálogos, FAB).
+       Las tarjetas no llevan sombra: se elevan por tono.
+       ====================================================================== */
+    --elev-0: none;
+    --elev-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+    --elev-2: 0 1px 2px rgba(0, 0, 0, 0.30), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+    --elev-3: 0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.30);
+
+    /* ======================================================================
+       ESPACIADO — base 8. Los componentes usan estos, no números sueltos.
+       ====================================================================== */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 40px;
+    --space-8: 48px;
+    --space-9: 64px;
+
+    /* ======================================================================
+       LAYOUT
+       ====================================================================== */
+    --content-max: 960px;
+    /* lectura y formularios */
+    --content-wide: 1200px;
+    /* vistas de dos paneles (el dashboard) */
+    --rail-width: 88px;
+    /* navigation rail de escritorio */
+    --topbar-height: 64px;
+    --bottombar-height: 80px;
+    /* navigation bar móvil */
+
+    /* Tamaño de icono — único origen. 24 por defecto. */
+    --icon-lg: 24px;
+    --icon-md: 20px;
+    --icon-sm: 18px;
+}
+
+/* ==========================================================================
+   3. ESQUEMA CLARO
+   theme.js aplica `.light-scheme` en <html> (y quita `.dark`). Se mantiene el
+   selector `.dark` invertido por compatibilidad con el script anti-flash y con
+   `darkMode: 'class'` de Tailwind: ver la nota en design-system.css.
+   ========================================================================== */
+:root:not(.dark) {
+    --m3-primary: var(--p-40);
+    --m3-on-primary: var(--p-100);
+    --m3-primary-container: var(--p-90);
+    --m3-on-primary-container: var(--p-10);
+    --m3-inverse-primary: var(--p-80);
+
+    --m3-secondary: var(--s-40);
+    --m3-on-secondary: #FFFFFF;
+    --m3-secondary-container: var(--s-90);
+    --m3-on-secondary-container: var(--s-10);
+
+    --m3-tertiary: var(--t-40);
+    --m3-on-tertiary: #FFFFFF;
+    --m3-tertiary-container: var(--t-90);
+    --m3-on-tertiary-container: var(--t-10);
+
+    --m3-error: var(--e-40);
+    --m3-on-error: #FFFFFF;
+    --m3-error-container: var(--e-90);
+    --m3-on-error-container: var(--e-10);
+
+    --m3-warning: var(--w-40);
+    --m3-on-warning: #FFFFFF;
+    --m3-warning-container: var(--w-90);
+    --m3-on-warning-container: var(--w-10);
+
+    --m3-info: var(--t-40);
+    --m3-on-info: #FFFFFF;
+    --m3-info-container: var(--t-90);
+    --m3-on-info-container: var(--t-10);
+
+    --m3-violet: var(--v-40);
+    --m3-on-violet: #FFFFFF;
+    --m3-violet-container: var(--v-90);
+    --m3-on-violet-container: var(--v-10);
+
+    --m3-surface: var(--n-98);
+    --m3-surface-dim: var(--n-87);
+    --m3-surface-bright: var(--n-98);
+    --m3-surface-container-lowest: var(--n-100);
+    --m3-surface-container-low: var(--n-96);
+    --m3-surface-container: var(--n-94);
+    --m3-surface-container-high: var(--n-92);
+    --m3-surface-container-highest: var(--n-90);
+
+    --m3-on-surface: var(--n-10);
+    --m3-on-surface-variant: var(--nv-30);
+    --m3-on-surface-muted: var(--nv-50);
+
+    --m3-outline: var(--nv-50);
+    --m3-outline-variant: var(--nv-80);
+
+    --m3-inverse-surface: var(--n-20);
+    --m3-inverse-on-surface: var(--n-95, #EDF5F0);
+
+    --elev-1: 0 1px 2px rgba(0, 0, 0, 0.10), 0 1px 3px 1px rgba(0, 0, 0, 0.06);
+    --elev-2: 0 1px 2px rgba(0, 0, 0, 0.10), 0 2px 6px 2px rgba(0, 0, 0, 0.08);
+    --elev-3: 0 4px 8px 3px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* ==========================================================================
+   Colores de marca de terceros — NO siguen el tema.
+   Son logotipos; WCAG exime a los logotipos del requisito de contraste.
+   ========================================================================== */
+:root {
+    --brand-facebook: #0866FF;
+    --brand-youtube: #FF0033;
+    --brand-instagram: #E4405F;
+    --brand-tiktok: #25F4EE;
+    --brand-x: currentColor;
+}
+
+/* ==========================================================================
+   5. ALIAS DE COMPATIBILIDAD
+   El landing (`pages/welcome.html`, fuera de alcance) y las páginas legales
+   siguen escribiendo `var(--text-2)`, `var(--surface)`, etc. Estos alias los
+   redirigen a roles de M3 para que hereden el tema nuevo sin tocarlos.
+   PROHIBIDO usarlos en el panel: ahí se usan las utilidades de Tailwind
+   (`text-on-surface-variant`, `bg-surface-container`…).
+   ========================================================================== */
+:root {
+    --bg: var(--m3-surface);
+    --surface: var(--m3-surface-container-low);
+    --surface-2: var(--m3-surface-container);
+    --surface-3: var(--m3-surface-container-high);
+    --border: var(--m3-outline-variant);
+    --border-strong: var(--m3-outline);
+
+    --text-1: var(--m3-on-surface);
+    --text-2: var(--m3-on-surface-variant);
+    --text-3: var(--m3-on-surface-muted);
+    --text-inverse: var(--m3-inverse-on-surface);
+
+    --brand: var(--m3-primary);
+    --brand-hover: var(--m3-primary);
+    --brand-soft: var(--m3-primary-container);
+    --brand-soft-border: var(--m3-outline-variant);
+    --brand-text: var(--m3-primary);
+
+    --shadow-sm: var(--elev-1);
+    --shadow-md: var(--elev-2);
+    --shadow-lg: var(--elev-3);
+
+    --ease: var(--ease-standard);
+    --dur-fast: var(--dur-short);
+    --dur: var(--dur-medium);
+    --dur-slow: var(--dur-long);
+
+    /* Easing exponencial de la transición de tema (View Transitions API) */
+    --expo-out: linear(0 0%, 0.1684 2.66%, 0.3165 5.49%, 0.446 8.52%, 0.5581 11.78%, 0.6535 15.29%, 0.7341 19.11%, 0.8011 23.3%, 0.8557 27.93%, 0.8962 32.68%, 0.9283 38.01%, 0.9529 44.08%, 0.9711 51.14%, 0.9833 59.06%, 0.9915 68.74%, 1 100%);
+}

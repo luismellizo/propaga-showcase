@@ -1,0 +1,114 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load allauth %}
+{% load socialaccount %}
+{% load static %}
+
+{% block head_title %}{% trans "Iniciar sesión" %}{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-sm fade-in-up">
+
+    <a href="{% url 'welcome' %}" class="flex items-center justify-center gap-3 mb-8">
+        <img src="{% static 'publications/logo.png' %}" alt="Propaga"
+             class="h-10 w-10 rounded-shape-md object-cover">
+        <span class="text-title-lg">PROPAGA</span>
+    </a>
+
+    <div class="card p-6 sm:p-8">
+
+        <div class="mb-6">
+            <h1 class="text-headline mb-1">{% trans "Bienvenido de vuelta" %}</h1>
+            <p class="text-body text-on-surface-variant">
+                {% blocktrans %}Ingresa tus credenciales para continuar.{% endblocktrans %}
+            </p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="banner banner--danger mb-6" role="alert">
+            <span class="material-symbols-outlined icon-md" aria-hidden="true">error</span>
+            <div>
+                {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <form class="login-form" method="post" action="{% url 'account_login' %}">
+            {% csrf_token %}
+            <div class="flex flex-col gap-4">
+                <div>
+                    <label for="{{ form.login.id_for_label }}" class="field-label">
+                        {% trans "Usuario" %}
+                    </label>
+                    <input type="text" name="{{ form.login.name }}"
+                        id="{{ form.login.id_for_label }}"
+                        value="{{ form.login.value|default_if_none:'' }}"
+                        placeholder="{% trans "Tu nombre de usuario" %}"
+                        class="input{% if form.login.errors %} input--error{% endif %}" required>
+                    {% if form.login.errors %}
+                    <ul class="field-error">
+                        {% for error in form.login.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="id_password" class="field-label">{% trans "Contraseña" %}</label>
+                    <input type="password" name="password" required id="id_password"
+                           placeholder="{% trans "Tu contraseña" %}"
+                           class="input{% if form.password.errors %} input--error{% endif %}">
+                    {% if form.password.errors %}
+                    <ul class="field-error">
+                        {% for error in form.password.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% if form.remember %}
+                <div class="flex items-center gap-2">
+                    {{ form.remember }}
+                    <label for="{{ form.remember.id_for_label }}" class="text-body text-on-surface-variant">{% trans "Recordarme" %}</label>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            <button class="btn btn-primary w-full mt-6" type="submit">
+                {% trans "Ingresar" %}
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_forward</span>
+            </button>
+        </form>
+
+        {% get_providers as socialaccount_providers %}
+        {% if socialaccount_providers %}
+        <div class="flex items-center gap-3 my-6">
+            <span class="flex-1 h-px bg-outline-variant"></span>
+            <span class="text-label text-on-surface-muted uppercase tracking-wide">{% trans "o" %}</span>
+            <span class="flex-1 h-px bg-outline-variant"></span>
+        </div>
+
+        {% for provider in socialaccount_providers %}
+        {% if provider.id == "google" %}
+        <a href="{% provider_login_url "google" process="login" %}"
+           class="btn btn-secondary w-full">
+            <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.3 0 10.2-2 13.9-5.4l-6.4-5.4C29.4 34.9 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.4 5.4C39.9 36.9 44 31 44 24c0-1.3-.1-2.7-.4-3.5z"/>
+            </svg>
+            {% trans "Continuar con Google" %}
+        </a>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <p class="text-center text-label text-on-surface-muted mt-8">
+        &copy; 2025 Propaga.
+    </p>
+</div>
+{% endblock %}

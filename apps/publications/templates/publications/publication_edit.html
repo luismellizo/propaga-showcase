@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}Publicación #{{ publication.id }}{% endblock %}
+
+{% block body %}
+{% include "partials/_app_nav.html" with active="dashboard" %}
+{% url 'publications:dashboard' as dashboard_url %}
+
+<div class="app-body">
+    {% include "partials/_app_bar.html" with title="Publicación" back_url=dashboard_url back_label="Volver al panel" %}
+
+    <div class="app-content pb-8">
+
+        <header class="mb-6">
+            <p class="text-label text-on-surface-muted mb-1">Publicación #{{ publication.id }}</p>
+            <h2 class="text-headline mb-3">
+                {% if publication.title %}{{ publication.title }}{% else %}Contenido en preparación{% endif %}
+            </h2>
+
+            {% comment %} `#main-status` lo refresca HTMX cada 2 s con _status_inline.html
+               (swap de innerHTML). El contenedor se queda; lo que cambia es el punto de
+               color y la etiqueta. El JS de abajo lee `data-status` del parcial para
+               decidir si recarga el formulario. {% endcomment %}
+            <span id="main-status" class="badge badge-neutral"
+                hx-get="{% url 'publications:get_publication_status' publication.pk %}" hx-trigger="every 2s"
+                hx-swap="innerHTML" aria-live="polite">
+                <span class="dot dot-neutral"></span>
+                {{ publication.get_status_display }}
+            </span>
+        </header>
+
+        <div class="card p-5 sm:p-6 relative">
+            <div id="edit-form-container" class="relative"
+                hx-get="{% url 'publications:get_edit_form' publication.pk %}" hx-trigger="statusChanged">
+
+                <div class="htmx-indicator absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-shape-lg"
+                    style="background: color-mix(in srgb, var(--m3-surface-container-low) 88%, transparent);">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span class="text-body text-on-surface-variant">Actualizando…</span>
+                </div>
+
+                {% include 'publications/partials/_edit_form.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Snackbar de M3 — mismo sitio y misma forma que los mensajes de Django (base.html) #}
+<div id="toast-container" role="status" aria-live="polite"
+    class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-[calc(100%-2rem)] max-w-md
+           lg:left-[calc(var(--rail-width)+1rem)] lg:translate-x-0 lg:max-w-sm"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // --- GESTOR DE PÁGINAS DE FACEBOOK (Global para que sea accesible tras recargas HTMX) ---
+    const facebookManager = {
+        init: function () {
+            console.log('📘 Inicializando Facebook Manager...');
+            const container = document.getElementById('facebook-pages-container');
+            const targetAccounts = document.getElementById('target-accounts-container');
+
+            if (!container || !targetAccounts) {
+                console.log('⚠️ Elementos de Facebook no encontrados en el DOM actual.');
+                return;
+            }
+
+            this.elements = {
+                container: container,
+                targetAccounts: targetAccounts,
+                pageSelect: document.getElementById('facebook-page-select'),
+                loadingMsg: document.getElementById('facebook-loading-message'),
+                pageIdField: document.getElementById('id_facebook_page_id')
+            };
+
+            this.setupListeners();
+            this.toggleSelector();
+        },
+
+        setupListeners: function () {
+            this.elements.targetAccounts.addEventListener('change', (e) => {
+                if (e.target.matches('input[data-provider="facebook"]')) {
+                    this.toggleSelector();
+                }
+            });
+
+            if (this.elements.pageSelect) {
+                this.elements.pageSelect.addEventListener('change', () => {
+                    if (this.elements.pageIdField) {
+                        this.elements.pageIdField.value = this.elements.pageSelect.value;
+                        console.log('✅ Page ID actualizado:', this.elements.pageSelect.value);
+                    }
+                });
+            }
+        },
+
+        toggleSelector: function () {
+            const fbCheckbox = this.elements.targetAccounts.querySelector('input[data-provider="facebook"]');
+            if (fbCheckbox && fbCheckbox.checked) {
+                this.fetchPages();
+            } else {
+                this.elements.container.classList.add('hidden');
+                if (this.elements.pageIdField) this.elements.pageIdField.value = '';
+            }
+        },
+
+        fetchPages: function () {
+            this.elements.loadingMsg.classList.remove('hidden');
+            if (this.elements.pageSelect) {
+                this.elements.pageSelect.innerHTML = '<option value="">Cargando páginas...</option>';
+            }
+
+            this.elements.container.classList.remove('hidden');
+
+            fetch("{% url 'publications:get_facebook_pages' %}")
+                .then(res => res.json())
+                .then(data => {
+                    this.elements.loadingMsg.classList.add('hidden');
+
+                    if (data.status === 'success' && data.pages?.length) {
+                        this.elements.pageSelect.innerHTML = '<option value="">-- Selecciona una página --</option>';
+
+                        data.pages.forEach(page => {
+                            const option = new Option(page.name, page.id);
+                            this.elements.pageSelect.add(option);
+                            if (this.elements.pageIdField?.value === page.id) option.selected = true;
+                        });
+                    } else {
+                        this.elements.pageSelect.innerHTML = '<option value="">No se encontraron páginas</option>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching FB pages:', err);
+                    this.elements.loadingMsg.classList.add('hidden');
+                    this.elements.pageSelect.innerHTML = '<option value="">Error de conexión</option>';
+                });
+        }
+    };
+
+    // --- EL MANEJADOR DE EVENTOS HTMX ---
+    let lastKnownStatus = '{{ publication.status }}'; // Último estado conocido (código de máquina)
+
+    document.body.addEventListener('htmx:afterSwap', function (event) {
+        // Re-inicializar scripts si se actualiza el formulario
+        if (event.target.id === 'edit-form-partial' || event.target.id === 'edit-form-container') {
+            facebookManager.init();
+        }
+
+        if (event.target.id === 'main-status') {
+            // El parcial _status_inline.html trae el código de estado en data-status
+            const statusEl = event.detail.elt.querySelector('[data-status]');
+            const status = statusEl ? statusEl.dataset.status : null;
+
+            if (status && status !== lastKnownStatus) {
+                console.log('⚡ Cambio de estado:', lastKnownStatus, '→', status, '. Refrescando panel...');
+
+                if (status === 'FAILED') {
+                    showToast('La publicación falló. Revisa el detalle abajo.', 'error');
+                }
+                if (status === 'PUBLISHED') {
+                    showToast('Publicación completada.', 'success');
+                }
+
+                lastKnownStatus = status;
+                htmx.trigger('#edit-form-container', 'statusChanged');
+            }
+        }
+
+        // Manejo de Triggers del Backend
+        const trigger = event.detail.xhr?.getResponseHeader('HX-Trigger');
+        if (trigger) {
+            if (trigger === 'changesSaved') showToast('Cambios guardados.', 'success');
+            if (trigger === 'missionApproved') showToast('Aprobado. Publicando en tus redes…', 'success');
+        }
+    });
+
+    // Inicialización global
+    document.addEventListener('DOMContentLoaded', function () {
+        facebookManager.init();
+    });
+
+    // Snackbar de M3. Es el MISMO componente que usan los mensajes de Django en
+    // base.html: antes había dos sistemas de notificación distintos conviviendo.
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const icons = { success: 'check_circle', error: 'error', info: 'info' };
+        const toast = document.createElement('div');
+        toast.className = 'snackbar' + (type === 'error' ? ' snackbar--danger' : '');
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined icon-md';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = icons[type] || icons.info;
+
+        const label = document.createElement('span');
+        label.textContent = message;   // textContent, no innerHTML: el mensaje puede venir del backend
+
+        toast.append(icon, label);
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'none';
+        });
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(8px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+</script>
+{% endblock %}

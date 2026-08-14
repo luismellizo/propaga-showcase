@@ -1,0 +1,32 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}Conexión cancelada{% endblock %}
+
+{% block content %}
+<div class="max-w-sm w-full fade-in-up">
+    <div class="card p-6 sm:p-8 text-center">
+
+        <div class="empty-state__icon mx-auto mb-6">
+            <span class="material-symbols-outlined" aria-hidden="true">back_hand</span>
+        </div>
+
+        <h1 class="text-headline mb-2">Conexión cancelada</h1>
+        <p class="text-body text-on-surface-variant mb-6">
+            Cancelaste la conexión con la red social. No se guardó nada —
+            puedes intentarlo de nuevo cuando quieras.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="{% url 'publications:dashboard' %}" class="btn btn-primary">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_back</span>
+                Volver al panel
+            </a>
+            <a href="{% url 'socialaccount_connections' %}" class="btn btn-secondary">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">cable</span>
+                Conectar cuentas
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block head_title %}Política de Privacidad{% endblock %}
+
+{% block body %}
+<div class="fixed top-4 right-4 z-50">
+    {% include "partials/_theme_toggle.html" %}
+</div>
+
+<div class="py-16 sm:py-20 px-4">
+    <div class="max-w-3xl mx-auto fade-in-up">
+
+        <div class="mb-10">
+            <p class="text-label text-on-surface-muted mb-2">Documento legal</p>
+            <h1 class="text-headline mb-2">Política de Privacidad</h1>
+            <p class="text-body text-on-surface-variant">Última actualización: Agosto 2025</p>
+        </div>
+
+        <div class="card p-8 md:p-12 prose-doc">
+
+            <section>
+                <h2>1. Introducción</h2>
+                <p>
+                    Bienvenido a Propaga. Respetamos su privacidad y nos comprometemos a proteger sus datos personales.
+                    Esta política de privacidad le informará sobre cómo cuidamos sus datos personales cuando visita
+                    nuestro sitio web e interactúa con nuestra aplicación.
+                </p>
+            </section>
+
+            <section>
+                <h2>2. Datos que Recopilamos</h2>
+                <p class="mb-2">Recopilamos y procesamos los siguientes datos para el funcionamiento del servicio:</p>
+                <ul>
+                    <li><strong>Información de Cuenta:</strong> Nombre, correo electrónico y foto de perfil
+                        proporcionados por Google/Meta/X.</li>
+                    <li><strong>Tokens de Acceso:</strong> Credenciales OAuth para publicar en su nombre (almacenadas de
+                        forma encriptada).</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>3. Cómo Usamos sus Datos</h2>
+                <p>Utilizamos sus datos exclusivamente para:</p>
+                <ul>
+                    <li>Autenticar su acceso al servicio.</li>
+                    <li>Procesar y publicar el contenido multimedia que usted sube.</li>
+                    <li>Mantener la seguridad de su cuenta.</li>
+                </ul>
+                <p class="callout">
+                    <strong>Nota:</strong> No vendemos ni compartimos sus datos personales con terceros para fines
+                    comerciales o publicitarios.
+                </p>
+            </section>
+
+            <section>
+                <h2>4. Retención de Datos</h2>
+                <p>
+                    Retenemos sus datos personales solo durante el tiempo necesario para cumplir con los fines para los
+                    que los recopilamos, incluido el cumplimiento de cualquier requisito legal, contable o de informes.
+                </p>
+            </section>
+
+            <section>
+                <h2>5. Contacto</h2>
+                <p>
+                    Si tiene preguntas sobre esta política de privacidad, contáctenos en: <a
+                        href="mailto:soporte@propaga.lat" class="link">soporte@propaga.lat</a>
+                </p>
+            </section>
+
+        </div>
+
+        <div class="mt-8">
+            <a href="/" class="btn btn-secondary">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_back</span>
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

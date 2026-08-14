@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block head_title %}Error del servidor{% endblock %}
+
+{% block body %}
+<div class="fixed top-4 right-4 z-50">
+    {% include "partials/_theme_toggle.html" %}
+</div>
+
+<main class="min-h-screen flex items-center justify-center px-4">
+    <div class="text-center max-w-sm fade-in-up">
+        <span class="badge bg-danger-container text-on-danger-container mb-6 inline-block">500</span>
+        <h1 class="text-headline mb-3">Algo salió mal</h1>
+        <p class="text-body text-on-surface-variant mb-8">
+            Ocurrió un error inesperado en el servidor. Ya estamos al tanto; intenta de nuevo en unos momentos.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="/" class="btn btn-primary w-full sm:w-auto">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">home</span>
+                Ir al inicio
+            </a>
+            <button onclick="location.reload()" class="btn btn-secondary w-full sm:w-auto">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">refresh</span>
+                Reintentar
+            </button>
+        </div>
+    </div>
+</main>
+{% endblock %}

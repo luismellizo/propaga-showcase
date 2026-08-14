@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% comment %}
+Shell de las pantallas de autenticación y de conexiones sociales. No lleva rail
+ni barra inferior (todavía no hay sesión, o el usuario está dentro de un flujo
+de OAuth): solo el lienzo centrado y el toggle de tema, a la misma altura que la
+barra superior del panel para que el salto entre login y panel no se note.
+{% endcomment %}
+
+{% block body %}
+<header class="app-topbar" id="app-topbar">
+    <span class="ml-auto">{% include "partials/_theme_toggle.html" %}</span>
+</header>
+
+<main class="flex items-center justify-center px-4 pb-12 min-h-[calc(100dvh-var(--topbar-height))]">
+    {% block content %}{% endblock %}
+</main>
+{% endblock %}

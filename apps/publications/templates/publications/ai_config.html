@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}Configuración de IA{% endblock %}
+
+{% block body %}
+{% include "partials/_app_nav.html" with active="ia" %}
+
+<div class="app-body">
+    {% include "partials/_app_bar.html" with title="Configuración de IA" %}
+
+    <div class="app-content pb-8">
+
+        <p class="text-body-lg text-on-surface-variant mb-6 max-w-prose">
+            Define la personalidad y las reglas con las que la IA escribe tus títulos, descripciones y hashtags.
+            Aplica a todas tus publicaciones nuevas.
+        </p>
+
+        <form method="post" class="flex flex-col gap-4">
+            {% csrf_token %}
+
+            <section class="card p-5 sm:p-6" aria-labelledby="h-personalidad">
+                <h2 id="h-personalidad" class="text-title-lg mb-1">Personalidad</h2>
+                <p class="text-body text-on-surface-variant mb-4">
+                    El tono de todos tus textos: títulos, descripciones y hashtags.
+                </p>
+                <label for="{{ form.personality.id_for_label }}" class="field-label">Tono</label>
+                {{ form.personality }}
+                {{ form.personality.errors }}
+            </section>
+
+            <section class="card p-5 sm:p-6" aria-labelledby="h-instrucciones">
+                <h2 id="h-instrucciones" class="text-title-lg mb-1">Instrucciones propias</h2>
+                <p class="text-body text-on-surface-variant mb-4">
+                    Reglas que la IA respetará siempre: tu nicho, palabras prohibidas, estilo de marca,
+                    llamados a la acción.
+                </p>
+                <label for="{{ form.custom_instructions.id_for_label }}" class="field-label">Instrucciones</label>
+                {{ form.custom_instructions }}
+                {{ form.custom_instructions.errors }}
+            </section>
+
+            <section class="card p-5 sm:p-6" aria-labelledby="h-hashtags">
+                <h2 id="h-hashtags" class="text-title-lg mb-4">Hashtags y emojis</h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                    <div>
+                        <label for="{{ form.default_hashtags.id_for_label }}" class="field-label">Hashtags fijos</label>
+                        {{ form.default_hashtags }}
+                        <p class="field-support">Se incluyen siempre, además de los que genere la IA.</p>
+                        {{ form.default_hashtags.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.hashtags_count.id_for_label }}" class="field-label">Cuántos generar</label>
+                        {{ form.hashtags_count }}
+                        <p class="field-support">Entre 1 y 10.</p>
+                        {{ form.hashtags_count.errors }}
+                    </div>
+                </div>
+
+                <label class="selectable mt-5" for="{{ form.use_emojis.id_for_label }}">
+                    <span class="flex-1 min-w-0">
+                        <span class="block">Usar emojis</span>
+                        <span class="text-body-sm text-on-surface-variant block">
+                            En el título y en la descripción.
+                        </span>
+                    </span>
+                    {{ form.use_emojis }}
+                </label>
+                {{ form.use_emojis.errors }}
+            </section>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-symbols-outlined icon-md" aria-hidden="true">save</span>
+                    Guardar configuración
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

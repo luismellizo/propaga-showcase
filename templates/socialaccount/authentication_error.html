@@ -1,0 +1,32 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}Error de conexión{% endblock %}
+
+{% block content %}
+<div class="max-w-sm w-full fade-in-up">
+    <div class="card p-6 sm:p-8 text-center">
+
+        <div class="empty-state__icon mx-auto mb-6 bg-danger-container text-on-danger-container">
+            <span class="material-symbols-outlined" aria-hidden="true">sync_problem</span>
+        </div>
+
+        <h1 class="text-headline mb-2">No se pudo conectar</h1>
+        <p class="text-body text-on-surface-variant mb-6">
+            Ocurrió un error al conectar con la red social. Puede ser un problema
+            temporal del proveedor o de configuración. Intenta de nuevo en unos minutos.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="{% url 'publications:dashboard' %}" class="btn btn-primary">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_back</span>
+                Volver al panel
+            </a>
+            <a href="{% url 'socialaccount_connections' %}" class="btn btn-secondary">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">refresh</span>
+                Reintentar
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

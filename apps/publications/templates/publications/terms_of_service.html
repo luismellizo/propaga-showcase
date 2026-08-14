@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block head_title %}Términos de Servicio{% endblock %}
+
+{% block body %}
+<div class="fixed top-4 right-4 z-50">
+    {% include "partials/_theme_toggle.html" %}
+</div>
+
+<div class="py-16 sm:py-20 px-4">
+    <div class="max-w-3xl mx-auto fade-in-up">
+
+        <div class="mb-10">
+            <p class="text-label text-on-surface-muted mb-2">Documento legal</p>
+            <h1 class="text-headline mb-2">Términos de Servicio</h1>
+            <p class="text-body text-on-surface-variant">Última actualización: Agosto 2025</p>
+        </div>
+
+        <div class="card p-8 md:p-12 prose-doc">
+
+            <section>
+                <h2>1. Aceptación de Términos</h2>
+                <p>
+                    Al acceder y utilizar Propaga, usted acepta estar sujeto a estos términos de servicio y a todas las
+                    leyes y regulaciones aplicables. Si no está de acuerdo con alguno de estos términos, tiene prohibido
+                    utilizar este sitio.
+                </p>
+            </section>
+
+            <section>
+                <h2>2. Licencia de Uso</h2>
+                <p class="mb-2">Se concede permiso para utilizar Propaga para la gestión y automatización de sus redes
+                    sociales personales o comerciales. Esta licencia no permite:</p>
+                <ul>
+                    <li>Modificar o copiar el software.</li>
+                    <li>Utilizar el servicio para cualquier propósito ilegal o no autorizado.</li>
+                    <li>Intentar descompilar o realizar ingeniería inversa de cualquier software contenido en Propaga.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>3. Limitación de Responsabilidad</h2>
+                <p>
+                    Propaga no será responsable de ningún daño (incluyendo, sin limitación, daños por pérdida de datos o
+                    beneficios) que surjan del uso o la imposibilidad de utilizar nuestros servicios, incluso si hemos
+                    sido notificados de la posibilidad de tales daños.
+                </p>
+                <p class="callout">
+                    <strong>Importante:</strong> Usted es responsable de asegurar que tiene los derechos necesarios
+                    sobre el contenido que publica a través de nuestra plataforma.
+                </p>
+            </section>
+
+            <section>
+                <h2>4. Modificaciones</h2>
+                <p>
+                    Podemos revisar estos términos de servicio en cualquier momento sin previo aviso. Al utilizar este
+                    sitio web, usted acepta estar sujeto a la versión actual de estos términos.
+                </p>
+            </section>
+
+        </div>
+
+        <div class="mt-8">
+            <a href="/" class="btn btn-secondary">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_back</span>
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

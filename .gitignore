@@ -1,0 +1,54 @@
+# --- SEGURIDAD Y SECRETOS (CRÍTICO) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.log
+
+# --- ENTORNO VIRTUAL Y PYTHON ---
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+htmlcov/
+.coverage
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+.mypy_cache/
+
+# --- DJANGO ---
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+# Nota: /static/ contiene el código fuente, NO ignorar. Solo staticfiles/ (recolectado).
+celerybeat-schedule
+celerybeat.pid
+
+# --- TAILWIND (build-time, ver Dockerfile) ---
+.bin/
+# El patrón sin comodín se ancla a la raíz del repo, y el código llegó a vivir
+# en un subdirectorio: así escrito NO ignoraba nada y el CSS compilado se
+# commiteó una vez. El `**/` es el arreglo.
+**/static/css/tailwind-built.css
+
+# --- IDE Y SISTEMA OPERATIVO ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# --- ARTEFACTOS DE HERRAMIENTAS ---
+.playwright-mcp/
+
+# --- NOTAS PRIVADAS ---
+# Preparación de entrevistas. Local, nunca al repo público.
+Explicacion.md

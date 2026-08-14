@@ -1,0 +1,93 @@
+# CI del snapshot público de PROPAGA.
+#
+# Solo verificación: checks de Django, guardia de deriva de migraciones y tests.
+# El repo privado tiene además un job de despliegue que construye la imagen, la
+# publica en GHCR y dispara el webhook de Coolify; aquí se omite a propósito —
+# este snapshot está congelado y no se despliega a ninguna parte.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: propaga_test
+          POSTGRES_USER: propaga_test
+          POSTGRES_PASSWORD: propaga_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    env:
+      SECRET_KEY: ci-only-dummy-key-not-for-prod
+      DEBUG: "True"
+      DB_NAME: propaga_test
+      DB_USER: propaga_test
+      DB_PASSWORD: propaga_test
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_RESULT_BACKEND: redis://localhost:6379/0
+      # Placeholders: los tests mockean las llamadas a Gemini y a Groq. Lo que
+      # se verifica es el flujo de estados y el manejo de errores, no que los
+      # proveedores estén en línea.
+      GEMINI_API_KEY: ci-placeholder
+      GROQ_API_KEY: ci-placeholder
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Guardia de deriva de migraciones
+        run: python manage.py makemigrations --check --dry-run
+
+      # Suite de dominio: base de datos efímera creada y destruida por el runner.
+      - name: Tests (base aislada)
+        run: python manage.py test apps tests --verbosity=2
+
+      # Suite independiente: corre contra la base real, porque verifica cosas que
+      # una base efímera no puede afirmar (permisos de MEDIA_ROOT, Redis vivo,
+      # SocialApps cargadas). Los tests de red quedan fuera: PROPAGA_NETWORK_TESTS
+      # no está definida, así que test_04 se salta solo.
+      - name: Migrar base real
+        run: python manage.py migrate --noinput
+
+      - name: Tests (suite independiente)
+        run: python testing/run_all.py

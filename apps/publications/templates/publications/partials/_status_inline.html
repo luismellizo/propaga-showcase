@@ -1,0 +1,17 @@
+{% comment %}
+Contenido del badge de estado del editor. HTMX lo mete cada 2 s en #main-status
+con swap de innerHTML, así que aquí NO va el contenedor.
+
+`data-status` lleva el código de máquina (PENDING, PROCESSING…), no el texto
+visible: el JS de publication_edit.html compara ese código para decidir si
+recarga el panel. Nunca comparar la etiqueta traducida.
+{% endcomment %}
+<span data-status="{{ pub.status }}" class="dot
+    {% if pub.status == 'PUBLISHED' %}dot-success
+    {% elif pub.status == 'PENDING' %}dot-warning
+    {% elif pub.status == 'PROCESSING' or pub.status == 'APPROVED' or pub.status == 'PUBLISHING' %}dot-info
+    {% elif pub.status == 'AWAITING_APPROVAL' %}dot-violet
+    {% elif pub.status == 'FAILED' %}dot-danger
+    {% else %}dot-neutral{% endif %}"></span>
+{{ pub.get_status_display }}
+<span class="text-on-surface-muted">· {{ pub.updated_at|date:"j M, H:i" }}</span>

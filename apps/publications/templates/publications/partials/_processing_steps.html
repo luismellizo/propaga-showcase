@@ -1,0 +1,37 @@
+{% comment %}
+Checklist en vivo de lo que está haciendo el worker de Celery. Se pollea cada
+3 s desde _edit_form.html (swap de innerHTML).
+
+`step.icon` es una ligadura de Material Symbols que vive en
+Publication.PROCESSING_STEPS / PUBLISHING_PROVIDER_STEPS. Si agregas un paso
+nuevo, su icono tiene que estar también en `icon_names=` de base.html o saldrá
+el nombre en texto.
+{% endcomment %}
+<ul class="flex flex-col gap-1 text-left" aria-live="polite">
+    {% for step in steps %}
+    <li class="step-row {% if step.state == 'done' %}is-done{% elif step.state == 'active' %}is-active{% endif %}">
+        <span class="step-row__marker">
+            {% if step.state == 'done' %}
+            <span class="material-symbols-outlined icon-sm" aria-hidden="true">check</span>
+            {% elif step.state == 'active' %}
+            <span class="spinner spinner--sm" aria-hidden="true"></span>
+            {% else %}
+            <span class="material-symbols-outlined icon-sm" aria-hidden="true">{{ step.icon }}</span>
+            {% endif %}
+        </span>
+
+        <span class="flex-1">{{ step.label }}</span>
+
+        {% if step.state == 'done' %}
+        <span class="text-label text-on-surface-muted">Listo</span>
+        {% endif %}
+    </li>
+    {% empty %}
+    {% comment %} El proceso terminó entre dos polls: el monitor de estado disparará
+       el refresco del panel. {% endcomment %}
+    <li class="step-row justify-center">
+        <span class="material-symbols-outlined icon-sm" aria-hidden="true">check_circle</span>
+        <span>Finalizando…</span>
+    </li>
+    {% endfor %}
+</ul>

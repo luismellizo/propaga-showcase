@@ -1,0 +1,327 @@
+{% comment %}
+Panel de edición y aprobación. El backend lo devuelve en tres sitios distintos
+(POST del propio formulario, regenerar contenido y refresco por cambio de
+estado), siempre con hx-swap="outerHTML" sobre #edit-form-partial.
+
+Contratos que NO se pueden tocar:
+  · id del <form> = edit-form-partial
+  · name/id de campos: target_accounts, publish_to_instagram,
+    id_publish_to_instagram, id_target_accounts_<pk>, data-provider
+  · ids que busca el JS de publication_edit.html: target-accounts-container,
+    facebook-pages-container, facebook-page-select, facebook-loading-message,
+    id_facebook_page_id, account-error
+  · los botones save_changes / approve y el hx-post de regenerar
+{% endcomment %}
+<form id="edit-form-partial" hx-post="{% url 'publications:publication_edit' publication.pk %}" hx-target="this"
+    hx-swap="outerHTML" enctype="multipart/form-data" class="flex flex-col gap-6">
+    {% csrf_token %}
+    {{ form.facebook_page_id }}
+
+    {% comment %} Progreso (3 pasos). Antes cada paso elegía su color con condicionales
+       anidadas que escupían utilidades crudas de Tailwind: convivían SEIS familias de
+       color (marca, azul, ámbar, violeta, verde y zinc) en un solo componente. Ahora
+       el estado es un dato (is-done / is-active) y el color lo pone el sistema. {% endcomment %}
+    <ol class="stepper" aria-label="Progreso de la publicación">
+        <li class="stepper__step {% if publication.status != 'PENDING' %}is-done{% else %}is-active{% endif %}">
+            <span class="stepper__marker">
+                <span class="material-symbols-outlined icon-sm" aria-hidden="true">auto_awesome</span>
+            </span>
+            <span class="stepper__label">Generación con IA</span>
+        </li>
+        <li
+            class="stepper__step {% if publication.status == 'APPROVED' or publication.status == 'PUBLISHING' or publication.status == 'PUBLISHED' %}is-done{% elif publication.status == 'AWAITING_APPROVAL' %}is-active{% endif %}">
+            <span class="stepper__marker">
+                <span class="material-symbols-outlined icon-sm" aria-hidden="true">visibility</span>
+            </span>
+            <span class="stepper__label">Tu revisión</span>
+        </li>
+        <li
+            class="stepper__step {% if publication.status == 'PUBLISHED' %}is-done{% elif publication.status == 'PUBLISHING' %}is-active{% endif %}">
+            <span class="stepper__marker">
+                <span class="material-symbols-outlined icon-sm" aria-hidden="true">send</span>
+            </span>
+            <span class="stepper__label">Publicación</span>
+        </li>
+    </ol>
+
+    {% if publication.status == 'FAILED' %}
+    {% comment %} Este bloque ADIVINABA la causa ("es posible que no se hayan
+       seleccionado cuentas o hubo un error de conexión") teniendo
+       publication.error_message a mano, que es lo único que sirve para
+       arreglarlo. {% endcomment %}
+    <div class="banner banner--danger" role="alert">
+        <span class="material-symbols-outlined icon-md flex-shrink-0" aria-hidden="true">error</span>
+        <div class="flex-1 min-w-0">
+            <p class="text-title mb-1">No se pudo publicar</p>
+            {% if publication.error_message %}
+            <pre
+                class="text-body-sm whitespace-pre-wrap break-words font-sans">{{ publication.error_message }}</pre>
+            {% else %}
+            <p class="text-body">Revisa que haya al menos una cuenta seleccionada y vuelve a intentarlo.</p>
+            {% endif %}
+        </div>
+        <button type="button" hx-post="{% url 'publications:regenerate_content' publication.pk %}"
+            hx-target="#edit-form-partial" hx-swap="outerHTML" class="btn btn-secondary flex-shrink-0">
+            <span class="material-symbols-outlined icon-md" aria-hidden="true">refresh</span>
+            Reintentar
+        </button>
+    </div>
+    {% endif %}
+
+    {% if publication.status == 'PUBLISHED' %}
+    <div class="banner banner--success" role="status">
+        <span class="material-symbols-outlined icon-md flex-shrink-0" aria-hidden="true">task_alt</span>
+        <div class="flex-1 min-w-0">
+            <p class="text-title mb-1">Publicado</p>
+            <p class="text-body mb-3">Tu contenido ya está en las redes que elegiste.</p>
+            <div class="flex flex-wrap gap-2">
+                {% if publication.youtube_video_url %}
+                <a href="{{ publication.youtube_video_url }}" target="_blank" rel="noopener" class="btn btn-secondary">
+                    <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="youtube" %}</span>
+                    Ver en YouTube
+                </a>
+                {% endif %}
+                {% if publication.facebook_video_url %}
+                <a href="{{ publication.facebook_video_url }}" target="_blank" rel="noopener" class="btn btn-secondary">
+                    <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="facebook" %}</span>
+                    Ver en Facebook
+                </a>
+                {% endif %}
+                {% if publication.instagram_permalink %}
+                <a href="{{ publication.instagram_permalink }}" target="_blank" rel="noopener" class="btn btn-secondary">
+                    <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="instagram" %}</span>
+                    Ver en Instagram
+                </a>
+                {% endif %}
+                {% if publication.twitter_tweet_url %}
+                <a href="{{ publication.twitter_tweet_url }}" target="_blank" rel="noopener" class="btn btn-secondary">
+                    <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="twitter" %}</span>
+                    Ver en X
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if publication.status == 'PROCESSING' or publication.status == 'PUBLISHING' %}
+    <section class="text-center py-6 flex flex-col items-center gap-3" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <p class="text-title-lg">
+            {% if publication.status == 'PROCESSING' %}Procesando tu video{% else %}Publicando en tus redes{% endif %}
+        </p>
+        <p class="text-body text-on-surface-variant max-w-sm">
+            Puede tardar unos minutos. Puedes cerrar esta ventana: el proceso sigue en el servidor.
+        </p>
+
+        <div class="w-full max-w-md mt-2" hx-get="{% url 'publications:get_processing_steps' publication.pk %}"
+            hx-trigger="load, every 3s" hx-swap="innerHTML">
+            <div class="flex flex-col gap-2">
+                <div class="skeleton h-11 w-full"></div>
+                <div class="skeleton h-11 w-full"></div>
+                <div class="skeleton h-11 w-5/6"></div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if publication.status == 'AWAITING_APPROVAL' or publication.status == 'PENDING' or publication.status == 'FAILED' %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+        <div class="md:col-span-2">
+            <label for="{{ form.title.id_for_label }}" class="field-label">Título</label>
+            {{ form.title }}
+            {{ form.title.errors }}
+        </div>
+
+        <div class="md:col-span-2">
+            <label for="{{ form.description.id_for_label }}" class="field-label">Descripción</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+        </div>
+
+        <div>
+            <label for="{{ form.hashtags.id_for_label }}" class="field-label">Hashtags</label>
+            {{ form.hashtags }}
+            <p class="field-support">Separados por comas. Ej.: #tech, #innovacion</p>
+            {{ form.hashtags.errors }}
+        </div>
+
+        <div>
+            <span class="field-label">Miniatura</span>
+            {% if publication.thumbnail %}
+            <img src="{{ publication.thumbnail.url }}" alt="Miniatura actual"
+                class="w-full h-28 object-cover rounded-shape-sm mb-3 bg-surface-container-high">
+            {% endif %}
+            {{ form.thumbnail }}
+            {{ form.thumbnail.errors }}
+        </div>
+    </div>
+
+    <section id="destinos" aria-labelledby="h-destinos">
+        <h3 id="h-destinos" class="text-title mb-1">Dónde se publica</h3>
+        <p class="text-body text-on-surface-variant mb-4">Elige al menos una cuenta.</p>
+
+        {% if has_google and not youtube_autorizado %}
+        <div class="banner banner--warning mb-4" role="alert">
+            <span class="material-symbols-outlined icon-md flex-shrink-0" aria-hidden="true">warning</span>
+            <p>
+                YouTube todavía no tiene permiso para subir videos. Entra a
+                <a href="{% url 'publications:dashboard' %}#conectar">Cuentas</a>, toca Google y acepta
+                «Subir videos de YouTube».
+            </p>
+        </div>
+        {% endif %}
+
+        <div id="target-accounts-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {% for account in all_user_accounts %}
+            <label class="selectable" for="id_target_accounts_{{ account.id }}">
+                <input type="checkbox" class="checkbox" name="target_accounts" value="{{ account.id }}"
+                    id="id_target_accounts_{{ account.id }}" data-provider="{{ account.provider }}"
+                    {% if account.id in selected_account_ids %}checked{% endif %}>
+
+                <span class="net-icon net-icon--sm">
+                    {% if account.provider == 'google' %}
+                    {% include "partials/_net_logo.html" with provider="youtube" %}
+                    {% else %}
+                    {% include "partials/_net_logo.html" with provider=account.provider %}
+                    {% endif %}
+                </span>
+
+                <span class="flex-1 min-w-0 truncate">
+                    {% if account.provider == 'tiktok' %}
+                    {{ account.extra_data.display_name|default:account.uid }}
+                    {% elif account.extra_data.name %}
+                    {{ account.extra_data.name }}
+                    {% else %}
+                    {{ account.provider|title }} ({{ account.uid }})
+                    {% endif %}
+                </span>
+
+                {% comment %} Estar conectado con Google no implica permiso de subida a
+                   YouTube: se avisa aquí para no descubrirlo cuando el worker falle
+                   con 403. {% endcomment %}
+                {% if account.provider == 'google' and not youtube_autorizado %}
+                <span class="badge badge-warning flex-shrink-0"
+                    title="Entra a Cuentas, toca Google y acepta «Subir videos de YouTube»">
+                    <span class="material-symbols-outlined icon-sm" aria-hidden="true">warning</span>
+                    Sin permiso
+                </span>
+                {% endif %}
+            </label>
+            {% empty %}
+            <div class="sm:col-span-2 empty-state">
+                <span class="empty-state__icon">
+                    <span class="material-symbols-outlined" aria-hidden="true">link_off</span>
+                </span>
+                <div>
+                    <p class="text-title-lg mb-1">No tienes cuentas conectadas</p>
+                    <p class="text-body text-on-surface-variant max-w-sm">
+                        Conecta al menos una red social para poder publicar.
+                    </p>
+                </div>
+                <a href="{% url 'publications:dashboard' %}#conectar" class="btn btn-primary">
+                    <span class="material-symbols-outlined icon-md" aria-hidden="true">cable</span>
+                    Conectar una cuenta
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% comment %} Instagram se publica a través de la conexión de Meta/Facebook (cuenta
+           IG profesional vinculada a la página), no con un login propio. {% endcomment %}
+        <label class="selectable mt-2" for="id_publish_to_instagram">
+            <input type="checkbox" class="checkbox" name="publish_to_instagram" id="id_publish_to_instagram"
+                {% if publication.publish_to_instagram and has_facebook %}checked{% endif %}
+                {% if not has_facebook %}disabled{% endif %}>
+            <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="instagram" %}</span>
+            <span class="flex-1 min-w-0">
+                <span class="block">Instagram (Reel)</span>
+                <span class="text-body-sm text-on-surface-variant block truncate-2">
+                    {% if has_facebook %}
+                    Sale en la cuenta profesional vinculada a tu página de Facebook
+                    {% else %}
+                    Conecta Meta para habilitarlo
+                    {% endif %}
+                </span>
+            </span>
+        </label>
+
+        <p id="account-error" class="field-error hidden" role="alert">
+            Elige al menos una cuenta para publicar.
+        </p>
+    </section>
+
+    <div id="facebook-pages-container" class="hidden">
+        <label for="facebook-page-select" class="field-label">Página de Facebook</label>
+        <select name="facebook_page_select" id="facebook-page-select" class="input">
+            <option value="">Selecciona una página</option>
+        </select>
+        <p id="facebook-loading-message" class="field-support hidden items-center gap-2">
+            <span class="spinner spinner--sm" aria-hidden="true"></span>
+            Buscando tus páginas…
+        </p>
+    </div>
+
+    <div class="flex flex-wrap gap-2 justify-end pt-4" style="border-top: 1px solid var(--m3-outline-variant);">
+        <button type="submit" name="save_changes" class="btn btn-ghost">
+            <span class="material-symbols-outlined icon-md" aria-hidden="true">save</span>
+            Guardar borrador
+        </button>
+
+        {% if publication.status == 'AWAITING_APPROVAL' or publication.status == 'FAILED' %}
+        <button type="button" hx-post="{% url 'publications:regenerate_content' publication.pk %}"
+            hx-target="#edit-form-partial" hx-swap="outerHTML" class="btn btn-secondary">
+            <span class="material-symbols-outlined icon-md" aria-hidden="true">autorenew</span>
+            Regenerar con IA
+        </button>
+
+        <button type="submit" name="approve" value="1" onclick="return validateSubmission(event)"
+            class="btn btn-primary">
+            <span class="material-symbols-outlined icon-md" aria-hidden="true">send</span>
+            Aprobar y publicar
+        </button>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+    <script>
+        function validateSubmission(e) {
+            const marcadas = document.querySelectorAll(
+                'input[name="target_accounts"]:checked, input[name="publish_to_instagram"]:checked'
+            );
+            const error = document.getElementById('account-error');
+            if (marcadas.length === 0) {
+                e.preventDefault();
+                error.classList.remove('hidden');
+                document.getElementById('destinos').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            error.classList.add('hidden');
+            return true;
+        }
+
+        // El aviso desaparece en cuanto el usuario marca algo, sin esperar al envío.
+        (function () {
+            const destinos = document.getElementById('destinos');
+            if (!destinos) return;
+            destinos.addEventListener('change', function () {
+                const marcadas = document.querySelectorAll(
+                    'input[name="target_accounts"]:checked, input[name="publish_to_instagram"]:checked'
+                );
+                if (marcadas.length > 0) document.getElementById('account-error').classList.add('hidden');
+            });
+        })();
+
+        // Este parcial se reinyecta por HTMX: hay que re-vincular el gestor de
+        // páginas de Facebook cada vez.
+        if (typeof facebookManager !== 'undefined') {
+            facebookManager.init();
+        } else {
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof facebookManager !== 'undefined') facebookManager.init();
+            });
+        }
+    </script>
+</form>

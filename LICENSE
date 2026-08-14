@@ -1,0 +1,104 @@
+Copyright (c) 2026 Luis Mellizo. Todos los derechos reservados.
+Copyright (c) 2026 Luis Mellizo. All Rights Reserved.
+
+================================================================================
+ESPAÑOL
+================================================================================
+
+LICENCIA DE SOLO CONSULTA — TODOS LOS DERECHOS RESERVADOS
+
+Este repositorio contiene un extracto parcial y curado del código fuente de
+PROPAGA, publicado con el único propósito de servir como muestra de trabajo
+(portafolio) para evaluación técnica.
+
+SE CONCEDE permiso, sin costo, a cualquier persona que acceda a este
+repositorio para:
+
+  a) leer, consultar y examinar el código con fines de evaluación técnica
+     del autor, revisión de portafolio o proceso de selección laboral.
+
+NO SE CONCEDE, y queda expresamente prohibido, sin autorización previa y por
+escrito del titular:
+
+  b) usar el código, total o parcialmente, en cualquier proyecto, producto o
+     servicio, sea comercial o no comercial;
+  c) copiar, reproducir, publicar o redistribuir el código, en su forma
+     original o modificada;
+  d) crear obras derivadas, adaptaciones o traducciones;
+  e) sublicenciar, vender, arrendar o transferir cualquier derecho sobre él;
+  f) utilizar el código, o cualquier porción de él, como material de
+     entrenamiento, ajuste fino o evaluación de modelos de aprendizaje
+     automático o sistemas de inteligencia artificial;
+  g) emplear los nombres, marcas, logotipos o identidad visual aquí presentes.
+
+El acto de bifurcar (fork) este repositorio dentro de la plataforma que lo
+aloja, en la medida en que dicha plataforma lo permita por sus propios
+términos de servicio, no constituye ni implica la concesión de ninguno de los
+derechos enumerados en los literales b) a g).
+
+ADVERTENCIA SOBRE EL CONTENIDO
+
+Este repositorio es un snapshot congelado e intencionalmente incompleto. Los
+prompts de producción del generador de contenido, las implementaciones de las
+cinco integraciones con redes sociales, la tabla de diagnóstico de errores de
+sus APIs y todas las credenciales fueron omitidos o sustituidos por stubs.
+El código NO es desplegable y NO representa el sistema en producción.
+
+AUSENCIA DE GARANTÍA
+
+EL SOFTWARE SE ENTREGA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O
+IMPLÍCITA, INCLUIDAS, ENTRE OTRAS, LAS GARANTÍAS DE COMERCIABILIDAD, IDONEIDAD
+PARA UN PROPÓSITO PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO EL TITULAR SERÁ
+RESPONSABLE POR RECLAMACIÓN, DAÑO U OTRA RESPONSABILIDAD DERIVADA DEL SOFTWARE
+O DE SU USO.
+
+
+================================================================================
+ENGLISH
+================================================================================
+
+VIEW-ONLY LICENSE — ALL RIGHTS RESERVED
+
+This repository contains a partial, curated excerpt of the source code of
+PROPAGA, published for the sole purpose of serving as a work sample (portfolio)
+for technical evaluation.
+
+PERMISSION IS GRANTED, free of charge, to any person accessing this repository
+to:
+
+  a) read, view and examine the code for the purposes of technically
+     evaluating the author, portfolio review, or a hiring process.
+
+NO OTHER RIGHTS ARE GRANTED. Without the prior written authorization of the
+copyright holder, the following are expressly prohibited:
+
+  b) using the code, in whole or in part, in any project, product or service,
+     whether commercial or non-commercial;
+  c) copying, reproducing, publishing or redistributing the code, in original
+     or modified form;
+  d) creating derivative works, adaptations or translations;
+  e) sublicensing, selling, leasing or transferring any right in it;
+  f) using the code, or any portion of it, as training, fine-tuning or
+     evaluation material for machine learning models or artificial
+     intelligence systems;
+  g) using the names, trademarks, logos or visual identity contained herein.
+
+Forking this repository within the hosting platform, to the extent permitted
+by that platform's own terms of service, neither constitutes nor implies a
+grant of any of the rights listed in items b) through g).
+
+NOTICE ABOUT THE CONTENT
+
+This repository is a frozen and intentionally incomplete snapshot. The
+production prompts of the content generator, the implementations of the five
+social-network integrations, their API error diagnosis table and all
+credentials have been omitted or replaced with stubs. The code is NOT
+deployable and does NOT represent the production system.
+
+NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING
+FROM THE SOFTWARE OR THE USE OF THE SOFTWARE.

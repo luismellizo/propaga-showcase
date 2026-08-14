@@ -1,0 +1,205 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load allauth %}
+{% load static %}
+
+{% block head_title %}{% trans "Conexiones de cuentas" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl w-full fade-in-up">
+    <div class="card p-6 sm:p-8">
+
+        <div class="mb-6">
+            <h1 class="text-headline mb-1">{% trans "Conexiones de cuentas" %}</h1>
+            <p class="text-body text-on-surface-variant">Gestiona las redes sociales conectadas a tu perfil.</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="banner banner--success mb-6" role="status">
+            <span class="material-symbols-outlined icon-md" aria-hidden="true">check_circle</span>
+            <p>{{ message }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% comment %}
+        SECCIÓN: cuentas ya conectadas.
+        Bug arreglado — indicador de selección: el patrón peer-checked no aplica
+        porque el div indicador no es hermano del <input>. Se reemplaza por
+        .selectable que usa :has(input:checked) en el <label> padre.
+        Bug arreglado — avatar sin fallback: ahora usa .avatar--sm con la inicial
+        como texto de respaldo; si la imagen carga, la cubre.
+        Bug arreglado — eliminar sin confirmación: onsubmit con confirm() en español.
+        {% endcomment %}
+        {% if form.accounts %}
+        <form method="post" action="{% url 'socialaccount_connections' %}"
+              onsubmit="return confirm('¿Seguro que quieres eliminar esta conexión? Perderás el acceso desde esa red social.');">
+            {% csrf_token %}
+            <fieldset>
+                <legend class="text-label text-on-surface-variant mb-4 block">
+                    Elige la cuenta que quieres desconectar:
+                </legend>
+
+                <div class="flex flex-col gap-3 mb-6">
+                {% for base_account in form.accounts %}
+                {% with base_account.get_provider_account as account %}
+                <label for="id_account_{{ base_account.id }}" class="selectable">
+                    <input id="id_account_{{ base_account.id }}" type="radio" name="account"
+                        value="{{ base_account.id }}" class="sr-only">
+
+                    {% comment %}Icono del proveedor (SVGs de marca — exentos de tokens){% endcomment %}
+                    <span class="net-icon flex-shrink-0">
+                        {% if base_account.provider == 'facebook' %}
+                        <svg class="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M22 12a10 10 0 1 0-11.5 9.9v-7H8v-3h2.5V9.5c0-2.5 1.5-3.9 3.7-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.3c-1.3 0-1.7.8-1.7 1.6V12h3l-.5 3h-2.5v7A10 10 0 0 0 22 12"/>
+                        </svg>
+                        {% elif base_account.provider == 'google' %}
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#EA4335" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        {% elif base_account.provider == 'tiktok' %}
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                        </svg>
+                        {% elif base_account.provider == 'twitter' %}
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
+                        </svg>
+                        {% else %}
+                        <span class="text-label">{{ base_account.provider|slice:":1"|upper }}</span>
+                        {% endif %}
+                    </span>
+
+                    <div class="flex-grow min-w-0">
+                        <p class="text-body">
+                            {% if base_account.provider == 'facebook' %}Meta{% else %}{{ base_account.provider|capfirst }}{% endif %}
+                            {% if base_account.provider == 'google' %}
+                            <span class="badge badge-danger ml-2">YouTube</span>
+                            {% elif base_account.provider == 'facebook' %}
+                            <span class="badge badge-info ml-2">Facebook + Instagram</span>
+                            {% endif %}
+                        </p>
+                        <div class="flex items-center gap-2 mt-1">
+                            {% comment %}
+                            Avatar con fallback: la inicial aparece de fondo;
+                            si la imagen carga, la cubre con object-fit cover.
+                            {% endcomment %}
+                            {% with avatar_url=account.get_avatar_url %}
+                            <span class="avatar avatar--sm" aria-hidden="true">
+                                {{ account|slice:":1"|upper }}
+                                {% if avatar_url and avatar_url != "None" %}
+                                <img src="{{ avatar_url }}" alt="">
+                                {% endif %}
+                            </span>
+                            {% endwith %}
+                            <span class="text-label text-on-surface-variant truncate">{{ account }}</span>
+                        </div>
+                    </div>
+
+                    <span class="material-symbols-outlined icon-md flex-shrink-0 text-on-surface-muted" aria-hidden="true">check_circle</span>
+                </label>
+                {% endwith %}
+                {% endfor %}
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" name="action_remove" class="btn btn-danger">
+                        <span class="material-symbols-outlined icon-md" aria-hidden="true">delete</span>
+                        {% trans "Desconectar cuenta" %}
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+
+        {% else %}
+        {% comment %}
+        Bug arreglado — estado vacío sin acción: ahora usa .empty-state con
+        el botón de conectar directamente dentro del bloque vacío.
+        {% endcomment %}
+        <div class="empty-state">
+            <span class="empty-state__icon">
+                <span class="material-symbols-outlined" aria-hidden="true">cable</span>
+            </span>
+            <div>
+                <p class="text-title-lg mb-1">Sin cuentas conectadas</p>
+                <p class="text-body text-on-surface-variant max-w-sm">
+                    Conecta una red social para poder publicar desde Propaga.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-8 pt-6 border-t border-outline-variant">
+            <h2 class="text-title mb-4">{% trans "Añadir conexión" %}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {% load socialaccount %}
+                {% get_providers as socialaccount_providers %}
+                {% for provider in socialaccount_providers %}
+                {% if provider.id != "openid" %}
+                {% comment %}Google: scope de YouTube + refresh token offline{% endcomment %}
+                <a title="{{ provider.name }}" class="selectable gap-4"
+                    {% if provider.id == 'google' %}
+                    href="{% provider_login_url provider.id process='connect' scope='https://www.googleapis.com/auth/youtube.upload' auth_params='access_type=offline&prompt=consent&include_granted_scopes=true' %}"
+                    {% else %}
+                    href="{% provider_login_url provider.id process='connect' %}"
+                    {% endif %}>
+                    <span class="net-icon flex-shrink-0">
+                        {% if provider.id == 'facebook' %}
+                        <svg class="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M22 12a10 10 0 1 0-11.5 9.9v-7H8v-3h2.5V9.5c0-2.5 1.5-3.9 3.7-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.3c-1.3 0-1.7.8-1.7 1.6V12h3l-.5 3h-2.5v7A10 10 0 0 0 22 12"/>
+                        </svg>
+                        {% elif provider.id == 'google' %}
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#EA4335" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        {% elif provider.id == 'tiktok' %}
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                        </svg>
+                        {% elif provider.id == 'twitter' %}
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
+                        </svg>
+                        {% elif provider.id == 'instagram' %}
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#f09433"/>
+                                    <stop offset="25%" stop-color="#e6683c"/>
+                                    <stop offset="50%" stop-color="#dc2743"/>
+                                    <stop offset="75%" stop-color="#cc2366"/>
+                                    <stop offset="100%" stop-color="#bc1888"/>
+                                </linearGradient>
+                            </defs>
+                            <path fill="url(#ig-grad)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.069-1.645-.069-4.85s.011-3.584.069-4.85c.149-3.225 1.664-4.771 4.919-4.919C8.416 2.175 8.796 2.163 12 2.163m0-2.163C8.74 0 8.333.012 7.053.072 2.695.22 0 2.977 0 7.373c-.06 1.28-.072 1.687-.072 4.627s.012 3.346.072 4.627c.22 4.396 2.977 7.153 7.373 7.301 1.28.06 1.687.072 4.627.072s3.346-.012 4.627-.072c4.396-.22 7.153-2.977 7.301-7.373.06-1.28.072-1.687.072-4.627s-.012-3.346-.072-4.627C21.023 2.977 18.266.22 13.87.072 12.59.012 12.183 0 8.87 0H12zM12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+                        </svg>
+                        {% else %}
+                        <span class="text-label">{{ provider.name|slice:":1"|upper }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="text-body">{% if provider.id == 'facebook' %}Meta{% else %}{{ provider.name }}{% endif %}</span>
+                    <span class="material-symbols-outlined icon-md ml-auto text-on-surface-muted" aria-hidden="true">add</span>
+                </a>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-outline-variant flex items-center justify-between gap-4">
+            <p class="text-label text-on-surface-muted">¿Ya terminaste?</p>
+            <a href="{% url 'publications:dashboard' %}" class="btn btn-primary">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_back</span>
+                Volver al panel
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

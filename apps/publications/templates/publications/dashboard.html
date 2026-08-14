@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+{% load static %}
+
+{% block head_title %}Panel{% endblock %}
+
+{% block body %}
+{% include "partials/_app_nav.html" with active="dashboard" %}
+
+<div class="app-body">
+    {% include "partials/_app_bar.html" with title="Panel" %}
+
+    <div class="app-content app-content--wide pb-8">
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+
+            {% comment %} ---------------------------------------------------------------
+               Nueva publicación
+               --------------------------------------------------------------- {% endcomment %}
+            <section class="card p-5 sm:p-6" aria-labelledby="h-nueva">
+                <div class="flex items-center gap-4 mb-5 flex-wrap">
+                    <h2 id="h-nueva" class="text-title-lg">Nueva publicación</h2>
+
+                    {% comment %} Segmented button de M3: `aria-selected` decide el estilo, así que el
+                       estado visible y el anunciado no se pueden desincronizar. {% endcomment %}
+                    <div class="segmented ml-auto" role="tablist" aria-label="Origen del video">
+                        <button type="button" role="tab" id="tab-url" aria-selected="true"
+                            aria-controls="mode-url" onclick="switchUploadMode('url')" class="segmented__item">
+                            <span class="material-symbols-outlined icon-sm" aria-hidden="true">link</span>
+                            Enlace
+                        </button>
+                        <button type="button" role="tab" id="tab-file" aria-selected="false"
+                            aria-controls="mode-file" onclick="switchUploadMode('file')" class="segmented__item">
+                            <span class="material-symbols-outlined icon-sm" aria-hidden="true">upload</span>
+                            Archivo
+                        </button>
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="upload-form">
+                    {% csrf_token %}
+
+                    <div id="mode-url" role="tabpanel" aria-labelledby="tab-url">
+                        <label for="input-url" class="field-label">Enlace del video</label>
+                        <input type="url" name="video_url" id="input-url" class="input"
+                            placeholder="https://youtube.com/watch?v=…">
+                        <p class="field-support" id="tip-text">
+                            Aceptamos YouTube, TikTok, Instagram y otras plataformas.
+                        </p>
+                    </div>
+
+                    <div id="mode-file" class="hidden" role="tabpanel" aria-labelledby="tab-file">
+                        <div id="drop-zone" class="dropzone" tabindex="0" role="button"
+                            aria-label="Seleccionar o arrastrar un video"
+                            onclick="document.getElementById('file-input').click()"
+                            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('file-input').click();}"
+                            ondragover="dropHighlight(event, true)" ondragleave="dropHighlight(event, false)"
+                            ondrop="handleDrop(event)">
+
+                            <input type="file" name="video_file" id="file-input" class="sr-only" accept="video/*"
+                                onchange="updateFileName(this)">
+
+                            <div id="upload-placeholder" class="pointer-events-none flex flex-col items-center gap-2">
+                                <span class="material-symbols-outlined" aria-hidden="true">cloud_upload</span>
+                                <p class="text-body-lg text-on-surface">Arrastra tu video o toca para elegirlo</p>
+                                <p class="text-body-sm text-on-surface-variant">MP4, MOV o AVI · hasta 500 MB</p>
+                            </div>
+
+                            <div id="file-selected" class="hidden flex-col items-center gap-2 pointer-events-none">
+                                <span class="material-symbols-outlined" aria-hidden="true">movie</span>
+                                <p id="filename-display" class="text-body-lg max-w-full truncate px-2"></p>
+                                <p class="text-body-sm">Listo para subir</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-upload" class="btn btn-primary w-full mt-5">
+                        <span class="material-symbols-outlined icon-md" aria-hidden="true">bolt</span>
+                        <span>Procesar con IA</span>
+                    </button>
+                    {% comment %} El proceso tarda minutos y sube hasta 500 MB: sin esto el botón se
+                       podía pulsar dos veces y no daba ninguna señal de que salió. {% endcomment %}
+                    <div id="upload-progress" class="progress progress--indeterminate mt-3 hidden">
+                        <div class="progress__value"></div>
+                    </div>
+                </form>
+            </section>
+
+            {% comment %} ---------------------------------------------------------------
+               Cuentas conectadas
+               --------------------------------------------------------------- {% endcomment %}
+            <section id="conectar" class="card p-5 sm:p-6" aria-labelledby="h-cuentas"
+                style="scroll-margin-top: 80px;">
+                <h2 id="h-cuentas" class="text-title-lg mb-1">Cuentas</h2>
+                <p class="text-body text-on-surface-variant mb-4">
+                    Conecta una red para poder publicar en ella.
+                </p>
+
+                {% get_providers as socialaccount_providers %}
+                <div class="flex flex-col gap-2">
+                    {% for provider in socialaccount_providers %}
+                    {% if provider.id != 'openid' %}
+                    {% comment %} Google: conectar para publicar pide el scope de YouTube
+                       (consentimiento incremental) y refresh token offline. Por eso las
+                       tarjetas ya conectadas siguen siendo clickeables. {% endcomment %}
+                    {% if provider.id == 'google' %}
+                    <a href="{% provider_login_url provider.id process='connect' scope='https://www.googleapis.com/auth/youtube.upload' auth_params='access_type=offline&prompt=consent&include_granted_scopes=true' %}"
+                        {% else %}
+                        <a href="{% provider_login_url provider.id process='connect' %}"
+                        {% endif %}
+                        class="list-item list-item--interactive rounded-shape-md">
+
+                        <span class="net-icon">
+                            {% include "partials/_net_logo.html" with provider=provider.id %}
+                        </span>
+
+                        <span class="flex-1 min-w-0">
+                            <span class="list-item__headline flex items-center gap-2 flex-wrap">
+                                {% if provider.id == 'facebook' %}Meta{% else %}{{ provider.name }}{% endif %}
+                                {% comment %} En móvil no cabe junto al badge de estado: la fila
+                                   quedaba con los dos superpuestos. El texto de apoyo de abajo ya
+                                   dice lo mismo. {% endcomment %}
+                                {% if provider.id == 'facebook' %}
+                                <span class="badge badge-info hidden md:inline-flex">Facebook + Instagram</span>
+                                {% endif %}
+                            </span>
+                            <span class="list-item__supporting block truncate-2">
+                                {% if provider.id == 'facebook' %}
+                                Publica en tu página y en el Instagram vinculado
+                                {% elif provider.id == 'google' %}
+                                {% if provider.id in connected_providers and not youtube_autorizado %}
+                                Falta el permiso para subir videos a YouTube
+                                {% else %}
+                                Sincroniza con YouTube
+                                {% endif %}
+                                {% elif provider.id == 'tiktok' %}
+                                Publica videos verticales
+                                {% else %}
+                                Conectar cuenta social
+                                {% endif %}
+                            </span>
+                        </span>
+
+                        {% comment %} Google tiene TRES estados, no dos: iniciar sesión con Google
+                           vincula la cuenta pero NO da permiso de subida a YouTube (se otorga
+                           aparte). Marcarla como "Conectada" hacía que la publicación fallara
+                           con 403 sin que el usuario tuviera forma de saberlo. {% endcomment %}
+                        {% if provider.id == 'google' and provider.id in connected_providers and not youtube_autorizado %}
+                        <span class="badge badge-warning flex-shrink-0">
+                            <span class="material-symbols-outlined icon-sm" aria-hidden="true">error</span>
+                            Autorizar YouTube
+                        </span>
+                        {% elif provider.id in connected_providers %}
+                        <span class="badge badge-success flex-shrink-0">
+                            <span class="dot dot-success"></span>
+                            {% if provider.id == 'google' %}Listo para publicar{% else %}Conectada{% endif %}
+                        </span>
+                        {% else %}
+                        <span class="badge badge-neutral flex-shrink-0">Sin conectar</span>
+                        {% endif %}
+
+                        {% comment %} Decorativo: la fila entera es el enlace. Se oculta en
+                           móvil para no robarle ancho al nombre de la cuenta. {% endcomment %}
+                        <span class="material-symbols-outlined icon-md text-on-surface-variant flex-shrink-0 hidden sm:block"
+                            aria-hidden="true">chevron_right</span>
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if not tiktok_available %}
+                        {% comment %} Visible pero inerte hasta que TikTok apruebe la app: desaparece
+                           solo al crear la SocialApp de tiktok (flag `tiktok_available`). {% endcomment %}
+                        <div class="list-item rounded-shape-md opacity-60 cursor-not-allowed select-none"
+                            title="TikTok estará disponible próximamente">
+                            <span class="net-icon">
+                                {% include "partials/_net_logo.html" with provider="tiktok" %}
+                            </span>
+                            <span class="flex-1 min-w-0">
+                                <span class="list-item__headline">TikTok</span>
+                                <span class="list-item__supporting block">Integración en revisión por TikTok</span>
+                            </span>
+                            <span class="badge badge-neutral flex-shrink-0">Próximamente</span>
+                        </div>
+                        {% endif %}
+                </div>
+            </section>
+        </div>
+
+        {% comment %} -------------------------------------------------------------------
+           Publicaciones
+           ------------------------------------------------------------------- {% endcomment %}
+        <section id="publicaciones" class="card p-5 sm:p-6" aria-labelledby="h-pubs"
+            style="scroll-margin-top: 80px;">
+
+            <div class="flex items-baseline gap-3 mb-4 flex-wrap">
+                <h2 id="h-pubs" class="text-title-lg">Publicaciones</h2>
+                <span class="text-body text-on-surface-variant">{{ status_counts.ALL }} en total</span>
+            </div>
+
+            <form method="get" role="search" class="mb-4">
+                {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                <div class="search-bar">
+                    <span class="material-symbols-outlined icon-md" aria-hidden="true">search</span>
+                    <input type="search" name="q" value="{{ search_query }}" placeholder="Buscar por título"
+                        aria-label="Buscar publicaciones por título">
+                    {% if search_query %}
+                    <a href="?{% if status_filter %}status={{ status_filter }}{% endif %}#publicaciones" class="icon-btn"
+                        aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
+                        <span class="material-symbols-outlined icon-md" aria-hidden="true">close</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+
+            {% comment %} Filter chips de M3. En móvil hacen scroll horizontal en vez de envolverse
+               en tres filas que empujaban la lista fuera de pantalla. {% endcomment %}
+            <div class="flex gap-2 mb-2 overflow-x-auto pb-2 -mx-1 px-1 sm:flex-wrap sm:overflow-visible"
+                role="group" aria-label="Filtrar por estado">
+                <a href="?status=ALL{% if search_query %}&q={{ search_query }}{% endif %}#publicaciones" class="chip"
+                    {% if not status_filter or status_filter == 'ALL' %}aria-selected="true"{% endif %}>
+                    {% if not status_filter or status_filter == 'ALL' %}<span
+                        class="material-symbols-outlined icon-sm" aria-hidden="true">check</span>{% endif %}
+                    Todos <span class="chip__count">{{ status_counts.ALL }}</span>
+                </a>
+                <a href="?status=PENDING{% if search_query %}&q={{ search_query }}{% endif %}#publicaciones" class="chip"
+                    {% if status_filter == 'PENDING' %}aria-selected="true"{% endif %}>
+                    <span class="dot dot-warning"></span>
+                    Pendientes <span class="chip__count">{{ status_counts.PENDING }}</span>
+                </a>
+                <a href="?status=PROCESSING{% if search_query %}&q={{ search_query }}{% endif %}#publicaciones"
+                    class="chip" {% if status_filter == 'PROCESSING' %}aria-selected="true"{% endif %}>
+                    <span class="dot dot-info"></span>
+                    Procesando <span class="chip__count">{{ status_counts.PROCESSING }}</span>
+                </a>
+                <a href="?status=AWAITING_APPROVAL{% if search_query %}&q={{ search_query }}{% endif %}#publicaciones"
+                    class="chip" {% if status_filter == 'AWAITING_APPROVAL' %}aria-selected="true"{% endif %}>
+                    <span class="dot dot-violet"></span>
+                    Por aprobar <span class="chip__count">{{ status_counts.AWAITING_APPROVAL }}</span>
+                </a>
+                <a href="?status=PUBLISHED{% if search_query %}&q={{ search_query }}{% endif %}#publicaciones"
+                    class="chip" {% if status_filter == 'PUBLISHED' %}aria-selected="true"{% endif %}>
+                    <span class="dot dot-success"></span>
+                    Publicadas <span class="chip__count">{{ status_counts.PUBLISHED }}</span>
+                </a>
+                <a href="?status=FAILED{% if search_query %}&q={{ search_query }}{% endif %}#publicaciones" class="chip"
+                    {% if status_filter == 'FAILED' %}aria-selected="true"{% endif %}>
+                    <span class="dot dot-danger"></span>
+                    Fallidas <span class="chip__count">{{ status_counts.FAILED }}</span>
+                </a>
+            </div>
+
+            <div class="list bg-transparent">
+                {% for pub in publications %}
+                {% include 'publications/partials/_publication_card.html' %}
+                {% empty %}
+                <div class="empty-state">
+                    <span class="empty-state__icon">
+                        <span class="material-symbols-outlined"
+                            aria-hidden="true">{% if search_query or status_filter %}travel_explore{% else %}inventory_2{% endif %}</span>
+                    </span>
+                    {% if search_query or status_filter %}
+                    <div>
+                        <p class="text-title-lg mb-1">Sin resultados</p>
+                        <p class="text-body text-on-surface-variant max-w-sm">
+                            {% if search_query %}
+                            No hay publicaciones que coincidan con «{{ search_query }}»{% if status_filter and status_filter != 'ALL' %}
+                            en este estado{% endif %}.
+                            {% else %}
+                            No tienes publicaciones en este estado todavía.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <a href="{% url 'publications:dashboard' %}" class="btn btn-secondary">
+                        <span class="material-symbols-outlined icon-md" aria-hidden="true">close</span>
+                        Quitar filtros
+                    </a>
+                    {% else %}
+                    <div>
+                        <p class="text-title-lg mb-1">Aún no has publicado nada</p>
+                        <p class="text-body text-on-surface-variant max-w-sm">
+                            Pega el enlace de un video arriba. La IA escribe el título, la descripción
+                            y los hashtags, y tú apruebas antes de que salga.
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-primary"
+                        onclick="document.getElementById('input-url').focus({preventScroll:false}); document.getElementById('input-url').scrollIntoView({behavior:'smooth', block:'center'});">
+                        <span class="material-symbols-outlined icon-md" aria-hidden="true">add</span>
+                        Crear la primera
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if publications.paginator.num_pages > 1 %}
+            <nav class="mt-4 pt-4 flex items-center justify-between flex-wrap gap-3"
+                style="border-top: 1px solid var(--m3-outline-variant);" aria-label="Paginación">
+                {% if publications.has_previous %}
+                <a href="?page={{ publications.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}#publicaciones"
+                    class="btn btn-secondary">
+                    <span class="material-symbols-outlined icon-md" aria-hidden="true">chevron_left</span>
+                    Anterior
+                </a>
+                {% else %}
+                <button type="button" class="btn btn-secondary" disabled>
+                    <span class="material-symbols-outlined icon-md" aria-hidden="true">chevron_left</span>
+                    Anterior
+                </button>
+                {% endif %}
+
+                <p class="text-body text-on-surface-variant" aria-live="polite">
+                    Página {{ publications.number }} de {{ publications.paginator.num_pages }}
+                    <span class="text-on-surface-muted">· {{ total_count }} resultados</span>
+                </p>
+
+                {% if publications.has_next %}
+                <a href="?page={{ publications.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}#publicaciones"
+                    class="btn btn-secondary">
+                    Siguiente
+                    <span class="material-symbols-outlined icon-md" aria-hidden="true">chevron_right</span>
+                </a>
+                {% else %}
+                <button type="button" class="btn btn-secondary" disabled>
+                    Siguiente
+                    <span class="material-symbols-outlined icon-md" aria-hidden="true">chevron_right</span>
+                </button>
+                {% endif %}
+            </nav>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function switchUploadMode(mode) {
+        const urlInput = document.getElementById('input-url');
+        const fileInput = document.getElementById('file-input');
+        const tabUrl = document.getElementById('tab-url');
+        const tabFile = document.getElementById('tab-file');
+        const isUrl = mode === 'url';
+
+        document.getElementById('mode-url').classList.toggle('hidden', !isUrl);
+        document.getElementById('mode-file').classList.toggle('hidden', isUrl);
+        tabUrl.setAttribute('aria-selected', String(isUrl));
+        tabFile.setAttribute('aria-selected', String(!isUrl));
+
+        // Solo se envía un origen: al cambiar de modo se limpia el otro.
+        if (isUrl) {
+            fileInput.value = '';
+            updateFileName(fileInput);
+        } else {
+            urlInput.value = '';
+        }
+    }
+
+    function updateFileName(input) {
+        const placeholder = document.getElementById('upload-placeholder');
+        const selected = document.getElementById('file-selected');
+        const filenameDisplay = document.getElementById('filename-display');
+        const has = input.files && input.files[0];
+
+        placeholder.classList.toggle('hidden', !!has);
+        selected.classList.toggle('hidden', !has);
+        selected.classList.toggle('flex', !!has);
+        if (has) filenameDisplay.textContent = input.files[0].name;
+    }
+
+    // `dragleave` salta con cada hijo que se cruza: se cuenta la profundidad para
+    // que el resaltado no parpadee mientras el cursor sigue dentro de la zona.
+    let dragDepth = 0;
+
+    function dropHighlight(e, entering) {
+        e.preventDefault();
+        dragDepth += entering ? 1 : -1;
+        if (dragDepth < 0) dragDepth = 0;
+        document.getElementById('drop-zone').classList.toggle('is-dragover', dragDepth > 0);
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        dragDepth = 0;
+        document.getElementById('drop-zone').classList.remove('is-dragover');
+
+        const files = e.dataTransfer.files;
+        const fileInput = document.getElementById('file-input');
+        if (files.length > 0) {
+            fileInput.files = files;
+            updateFileName(fileInput);
+        }
+    }
+
+    // Estado de carga: subir 500 MB puede tardar y antes no había ninguna señal.
+    document.getElementById('upload-form').addEventListener('submit', function () {
+        const btn = document.getElementById('submit-upload');
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+        document.getElementById('upload-progress').classList.remove('hidden');
+    });
+</script>
+{% endblock %}

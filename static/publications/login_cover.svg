@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#022c22"/>
+      <stop offset="45%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="30%" cy="25%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="75%" cy="80%" r="55%">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#10b981" stroke-opacity="0.08" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="1600" fill="url(#bg)"/>
+  <rect width="1200" height="1600" fill="url(#grid)"/>
+  <rect width="1200" height="1600" fill="url(#glow1)"/>
+  <rect width="1200" height="1600" fill="url(#glow2)"/>
+
+  <!-- Anillos decorativos -->
+  <circle cx="920" cy="320" r="180" fill="none" stroke="#34d399" stroke-opacity="0.15" stroke-width="2"/>
+  <circle cx="920" cy="320" r="120" fill="none" stroke="#34d399" stroke-opacity="0.25" stroke-width="2"/>
+  <circle cx="240" cy="1240" r="220" fill="none" stroke="#10b981" stroke-opacity="0.12" stroke-width="2"/>
+
+  <!-- Marca -->
+  <g transform="translate(120, 700)">
+    <text x="0" y="0" font-family="Inter, system-ui, sans-serif" font-size="92" font-weight="800" fill="#ecfdf5" letter-spacing="-2">PROPAGA</text>
+    <rect x="4" y="34" width="120" height="6" rx="3" fill="#10b981"/>
+    <text x="0" y="96" font-family="Inter, system-ui, sans-serif" font-size="34" font-weight="500" fill="#a7f3d0">Un video. Todas tus redes.</text>
+    <text x="0" y="150" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="400" fill="#6ee7b7" opacity="0.8">Automatización de publicaciones con IA</text>
+  </g>
+
+  <!-- Iconos de redes estilizados como nodos -->
+  <g stroke="#34d399" stroke-opacity="0.3" stroke-width="1.5" fill="none">
+    <line x1="600" y1="1050" x2="380" y2="1180"/>
+    <line x1="600" y1="1050" x2="620" y2="1230"/>
+    <line x1="600" y1="1050" x2="830" y2="1160"/>
+  </g>
+  <circle cx="600" cy="1050" r="14" fill="#10b981"/>
+  <circle cx="380" cy="1180" r="9" fill="#34d399" opacity="0.8"/>
+  <circle cx="620" cy="1230" r="9" fill="#34d399" opacity="0.8"/>
+  <circle cx="830" cy="1160" r="9" fill="#34d399" opacity="0.8"/>
+</svg>

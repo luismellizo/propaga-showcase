@@ -1,0 +1,88 @@
+{% comment %}
+Fila de la lista de publicaciones.
+
+OJO: HTMX reemplaza este nodo ENTERO (`hx-swap="outerHTML"`) cada 5 s mientras
+la publicación está en un estado vivo. De ahí dos reglas:
+  · nada de clases de animación de entrada — se reiniciarían en cada swap y la
+    fila parpadearía sin parar;
+  · todo lo que deba actualizarse (incluido el detalle del error) tiene que
+    quedar DENTRO del div raíz, o se congelaría con el valor viejo.
+El `id` y los atributos hx-* son contrato con el backend: no tocarlos.
+{% endcomment %}
+<div class="list-item list-item--stack" id="publication-card-{{ pub.id }}"
+    {% if pub.status == 'PENDING' or pub.status == 'PROCESSING' or pub.status == 'PUBLISHING' or pub.status == 'AWAITING_APPROVAL' %}hx-get="{% url 'publications:get_publication_status' pub.pk %}" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+
+    <div class="flex items-start gap-4 w-full">
+        <a href="{% url 'publications:publication_edit' pub.pk %}"
+            class="flex items-start gap-4 flex-1 min-w-0 rounded-shape-sm"
+            {% if pub.title %}title="{{ pub.title }}"{% endif %}>
+
+            {% if pub.thumbnail %}
+            <img src="{{ pub.thumbnail.url }}" alt=""
+                class="w-14 h-14 rounded-shape-sm object-cover flex-shrink-0 bg-surface-container-high">
+            {% else %}
+            <span
+                class="w-14 h-14 rounded-shape-sm flex-shrink-0 bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">movie</span>
+            </span>
+            {% endif %}
+
+            <span class="flex-1 min-w-0">
+                <span class="list-item__headline block truncate-2">
+                    {% if pub.title %}{{ pub.title }}{% else %}Contenido en proceso{% endif %}
+                </span>
+
+                <span class="list-item__supporting flex items-center gap-x-3 gap-y-1 flex-wrap mt-1">
+                    <span>{{ pub.updated_at|date:'j M, H:i' }}</span>
+
+                    {% if pub.youtube_video_url or pub.facebook_video_url or pub.instagram_permalink or pub.twitter_tweet_url %}
+                    <span class="flex items-center gap-1.5">
+                        {% if pub.youtube_video_url %}
+                        <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="youtube" %}</span>
+                        {% endif %}
+                        {% if pub.facebook_video_url %}
+                        <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="facebook" %}</span>
+                        {% endif %}
+                        {% if pub.instagram_permalink %}
+                        <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="instagram" %}</span>
+                        {% endif %}
+                        {% if pub.twitter_tweet_url %}
+                        <span class="net-icon net-icon--sm">{% include "partials/_net_logo.html" with provider="twitter" %}</span>
+                        {% endif %}
+                    </span>
+                    {% elif pub.video_url %}
+                    <span class="truncate max-w-[20ch] sm:max-w-[36ch]">{{ pub.video_url }}</span>
+                    {% endif %}
+                </span>
+            </span>
+        </a>
+
+        <span class="badge flex-shrink-0 {% if pub.status == 'PUBLISHED' %}badge-success{% elif pub.status == 'PENDING' %}badge-warning{% elif pub.status == 'PROCESSING' or pub.status == 'PUBLISHING' or pub.status == 'APPROVED' %}badge-info{% elif pub.status == 'AWAITING_APPROVAL' %}badge-violet{% elif pub.status == 'FAILED' %}badge-danger{% else %}badge-neutral{% endif %}">
+            {% if pub.status == 'PROCESSING' or pub.status == 'PUBLISHING' %}
+            <span class="spinner spinner--sm" style="width:12px; height:12px;" aria-hidden="true"></span>
+            {% endif %}
+            {{ pub.get_status_display }}
+        </span>
+    </div>
+
+    {% comment %} Fallos por red. Se muestran también en PUBLISHED: una publicación puede
+       salir en Facebook y fallar en YouTube, y antes eso quedaba invisible. El <details>
+       va fuera del <a> a propósito: dentro de un enlace no se puede abrir sin
+       navegar. {% endcomment %}
+    {% if pub.error_message %}
+    <details class="w-full mt-2">
+        <summary
+            class="text-body-sm cursor-pointer inline-flex items-center gap-2 py-1 {% if pub.status == 'PUBLISHED' %}text-on-surface-variant{% else %}text-danger{% endif %}">
+            <span class="material-symbols-outlined icon-sm"
+                aria-hidden="true">{% if pub.status == 'PUBLISHED' %}warning{% else %}error{% endif %}</span>
+            {% if pub.status == 'PUBLISHED' %}
+            Se publicó, pero algunas redes fallaron
+            {% else %}
+            Ver detalle del error
+            {% endif %}
+        </summary>
+        <pre
+            class="mt-2 p-3 rounded-shape-sm bg-surface-container-high text-body-sm text-on-surface-variant whitespace-pre-wrap break-words font-sans">{{ pub.error_message }}</pre>
+    </details>
+    {% endif %}
+</div>

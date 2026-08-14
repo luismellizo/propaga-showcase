@@ -1,0 +1,2023 @@
+/* ==========================================================================
+   PROPAGA — Capa de componentes (Material 3)
+   --------------------------------------------------------------------------
+   Los VALORES viven en tokens.css. Aquí solo se componen roles.
+   Regla: si en este archivo aparece un `#hex`, es un bug — salvo los logotipos
+   de terceros, que están tokenizados como `--brand-*`.
+
+   Índice:
+     1. Base
+     2. Capa de estado (state layer) y foco
+     3. Shell: app bar, navigation rail, navigation bar, drawer
+     4. Superficies y tarjetas
+     5. Botones
+     6. Campos de formulario
+     7. Chips, badges, avatares
+     8. Listas
+     9. Progreso y skeletons
+    10. Overlays: snackbar, diálogo, menú, tooltip
+    11. Iconografía (Material Symbols)
+    12. Utilidades
+    13. Legado del landing (fuera de alcance — se conserva tal cual)
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Base
+   ========================================================================== */
+
+html {
+    background-color: var(--m3-surface);
+}
+
+body {
+    background-color: var(--m3-surface);
+    color: var(--m3-on-surface);
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    font-variation-settings: 'wdth' 100;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color var(--dur-long) var(--ease-standard),
+        color var(--dur-long) var(--ease-standard);
+}
+
+/* Contraste garantizado: el texto seleccionado usa el par
+   primary-container / on-primary-container, no blanco sobre verde claro. */
+::selection {
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+}
+
+/* Scrollbar: sutil, del color del contorno, y con soporte real en Firefox. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--m3-outline-variant) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--m3-outline-variant);
+    border-radius: var(--shape-full);
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--m3-outline);
+    background-clip: content-box;
+}
+
+/* Alias histórico: varios contenedores traen `.custom-scrollbar`. */
+.custom-scrollbar {
+    scrollbar-width: thin;
+}
+
+/* ==========================================================================
+   2. Capa de estado + foco
+   --------------------------------------------------------------------------
+   En M3 el feedback de hover/pressed NO es mover ni escalar el elemento: es un
+   velo del color del CONTENIDO sobre el contenedor (8 % hover, 10 % pressed).
+   Así funciona con cualquier fondo y no rompe el layout.
+   ========================================================================== */
+
+.state-layer {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+
+.state-layer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    transition: opacity var(--dur-short) var(--ease-standard);
+    z-index: 0;
+}
+
+.state-layer:hover::after {
+    opacity: var(--m3-state-hover);
+}
+
+.state-layer:focus-visible::after {
+    opacity: var(--m3-state-focus);
+}
+
+.state-layer:active::after {
+    opacity: var(--m3-state-pressed);
+}
+
+.state-layer>* {
+    position: relative;
+    z-index: 1;
+}
+
+/* Foco de teclado — uno solo para toda la app, siempre visible. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--m3-primary);
+    outline-offset: 2px;
+    border-radius: var(--shape-xs);
+}
+
+/* ==========================================================================
+   3. Shell
+   ========================================================================== */
+
+.app-shell {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--m3-surface);
+    color: var(--m3-on-surface);
+}
+
+/* El contenido deja sitio al rail en escritorio y a la barra inferior en móvil. */
+.app-body {
+    padding-bottom: calc(var(--bottombar-height) + var(--space-4));
+}
+
+@media (min-width: 1024px) {
+    .app-body {
+        padding-left: var(--rail-width);
+        padding-bottom: var(--space-8);
+    }
+}
+
+.app-content {
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding-inline: var(--space-4);
+}
+
+.app-content--wide {
+    max-width: var(--content-wide);
+}
+
+@media (min-width: 600px) {
+    .app-content {
+        padding-inline: var(--space-5);
+    }
+}
+
+/* --- Top app bar ---------------------------------------------------------
+   64px, plana sobre `surface`. Al hacer scroll pasa a `surface-container` (la
+   elevación en M3 es un cambio de TONO, no una sombra). theme.js le pone
+   `.scrolled`, igual que hacía con la isla vieja. */
+.app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: var(--topbar-height);
+    padding-inline: var(--space-2) var(--space-3);
+    background: var(--m3-surface);
+    transition: background-color var(--dur-long) var(--ease-standard);
+}
+
+.app-topbar.scrolled {
+    background: var(--m3-surface-container);
+}
+
+.app-topbar__title {
+    font-size: var(--type-title-lg-size);
+    line-height: var(--type-title-lg-line);
+    font-weight: 400;
+    color: var(--m3-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (min-width: 1024px) {
+    .app-topbar {
+        padding-inline: var(--space-5) var(--space-4);
+    }
+}
+
+/* --- Navigation rail (escritorio) ---------------------------------------- */
+.nav-rail {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 45;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    width: var(--rail-width);
+    padding-block: var(--space-3) var(--space-4);
+    background: var(--m3-surface);
+}
+
+@media (min-width: 1024px) {
+    .nav-rail {
+        display: flex;
+    }
+}
+
+.nav-rail__brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--shape-lg);
+    margin-bottom: var(--space-2);
+}
+
+.nav-rail__spacer {
+    flex: 1;
+}
+
+/* Destino: indicador activo = píldora de 56×32 en secondary-container.
+   El label vive SIEMPRE debajo (M3 rail), nunca aparece/desaparece al hover. */
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    width: 64px;
+    padding: 0;
+    color: var(--m3-on-surface-variant);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: 0;
+}
+
+.nav-item__indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 32px;
+    border-radius: var(--shape-lg);
+    transition: background-color var(--dur-medium) var(--ease-standard),
+        color var(--dur-medium) var(--ease-standard);
+}
+
+.nav-item__label {
+    font-size: var(--type-label-size);
+    line-height: var(--type-label-line);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-align: center;
+}
+
+.nav-item:hover .nav-item__indicator {
+    background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+}
+
+.nav-item[aria-current="page"] {
+    color: var(--m3-on-secondary-container);
+}
+
+.nav-item[aria-current="page"] .nav-item__indicator {
+    background: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+}
+
+.nav-item[aria-current="page"] .nav-item__label {
+    color: var(--m3-on-surface);
+}
+
+.nav-item:focus-visible {
+    outline: 3px solid var(--m3-primary);
+    outline-offset: 2px;
+    border-radius: var(--shape-md);
+}
+
+/* --- Navigation bar (móvil, inferior) ------------------------------------ */
+.nav-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: var(--bottombar-height);
+    padding-block: var(--space-3);
+    padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+    background: var(--m3-surface-container);
+}
+
+@media (min-width: 1024px) {
+    .nav-bar {
+        display: none;
+    }
+}
+
+.nav-bar .nav-item {
+    flex: 1;
+    max-width: 96px;
+}
+
+.nav-bar .nav-item__indicator {
+    width: 64px;
+}
+
+/* --- Icon button (M3) ---------------------------------------------------- */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: var(--shape-full);
+    background: transparent;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    color: var(--m3-on-surface);
+}
+
+.icon-btn--filled {
+    background: var(--m3-surface-container-high);
+    color: var(--m3-on-surface);
+}
+
+.icon-btn:disabled {
+    color: color-mix(in srgb, var(--m3-on-surface) 38%, transparent);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Toggle de tema — un solo control, en todos lados igual. Sin rotaciones. */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: var(--shape-full);
+    background: transparent;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+}
+
+.theme-toggle:hover {
+    color: var(--m3-on-surface);
+}
+
+/* Muestra el tema ACTUAL (sol = claro, luna = oscuro), como antes del rediseño. */
+.theme-toggle .icon-sun {
+    display: inline-flex;
+}
+
+.theme-toggle .icon-moon {
+    display: none;
+}
+
+.dark .theme-toggle .icon-sun {
+    display: none;
+}
+
+.dark .theme-toggle .icon-moon {
+    display: inline-flex;
+}
+
+/* Transición de tema (View Transitions API). El círculo lo anima theme.js. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    z-index: -1;
+}
+
+/* Sin esto la View Transition captura los colores a mitad de fade. */
+.no-transitions,
+.no-transitions * {
+    transition: none !important;
+}
+
+/* ==========================================================================
+   4. Superficies y tarjetas
+   --------------------------------------------------------------------------
+   Sin borde y sin sombra: se distinguen del fondo por TONO. Es la diferencia
+   más visible entre "plantilla admin" y una app de Google.
+   ========================================================================== */
+
+.card {
+    background: var(--m3-surface-container-low);
+    border-radius: var(--shape-lg);
+    color: var(--m3-on-surface);
+    transition: background-color var(--dur-long) var(--ease-standard);
+}
+
+.card--outlined {
+    background: var(--m3-surface);
+    border: 1px solid var(--m3-outline-variant);
+}
+
+/* Tarjeta pulsable: el feedback es la capa de estado, no levantarse. */
+.card--interactive {
+    cursor: pointer;
+}
+
+.card--interactive:hover {
+    background: var(--m3-surface-container);
+}
+
+.surface-2 {
+    background: var(--m3-surface-container);
+}
+
+.divider {
+    height: 1px;
+    border: 0;
+    background: var(--m3-outline-variant);
+}
+
+/* ==========================================================================
+   5. Botones
+   --------------------------------------------------------------------------
+   Altura 40, radio full, label 14/500. Las 5 variantes de M3.
+   ========================================================================== */
+
+.btn {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    height: 40px;
+    padding-inline: var(--space-5);
+    border-radius: var(--shape-full);
+    border: 0;
+    font-family: inherit;
+    font-size: var(--type-label-lg-size);
+    line-height: var(--type-label-lg-line);
+    font-weight: 500;
+    letter-spacing: 0.007em;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color var(--dur-short) var(--ease-standard),
+        color var(--dur-short) var(--ease-standard),
+        box-shadow var(--dur-short) var(--ease-standard);
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-short) var(--ease-standard);
+}
+
+.btn:hover::after {
+    opacity: var(--m3-state-hover);
+}
+
+.btn:focus-visible::after {
+    opacity: var(--m3-state-focus);
+}
+
+.btn:active::after {
+    opacity: var(--m3-state-pressed);
+}
+
+.btn>* {
+    position: relative;
+    z-index: 1;
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"],
+.btn.is-disabled {
+    background: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
+    color: color-mix(in srgb, var(--m3-on-surface) 38%, transparent);
+    box-shadow: none;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn:disabled::after,
+.btn.is-disabled::after {
+    opacity: 0;
+}
+
+/* Filled — la acción principal. Una por pantalla. */
+.btn-primary {
+    background: var(--m3-primary);
+    color: var(--m3-on-primary);
+}
+
+/* Tonal — acción secundaria con peso. */
+.btn-tonal {
+    background: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+}
+
+/* Outlined — antes se llamaba `.btn-secondary`; se conserva el nombre. */
+.btn-secondary {
+    background: transparent;
+    color: var(--m3-primary);
+    border: 1px solid var(--m3-outline);
+}
+
+.btn-secondary:disabled,
+.btn-secondary.is-disabled {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
+}
+
+/* Text — la acción de menor peso. */
+.btn-ghost {
+    background: transparent;
+    color: var(--m3-primary);
+    padding-inline: var(--space-3);
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--m3-error);
+    border: 1px solid color-mix(in srgb, var(--m3-error) 50%, transparent);
+}
+
+.btn-danger-filled {
+    background: var(--m3-error);
+    color: var(--m3-on-error);
+}
+
+/* Denso: filas, chips de acción, barras de herramientas. */
+.btn--dense {
+    height: 32px;
+    padding-inline: var(--space-4);
+    font-size: var(--type-label-size);
+}
+
+/* Estado de carga: el botón conserva su tamaño y bloquea el doble envío. */
+.btn.is-loading {
+    pointer-events: none;
+    color: transparent;
+}
+
+.btn.is-loading::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline: 0;
+    margin: auto;
+    width: 18px;
+    height: 18px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: var(--shape-full);
+    animation: spin 700ms linear infinite;
+    z-index: 2;
+}
+
+.btn-primary.is-loading::before {
+    border-color: var(--m3-on-primary);
+    border-top-color: transparent;
+}
+
+/* FAB */
+.fab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-width: 56px;
+    height: 56px;
+    padding-inline: var(--space-4);
+    border: 0;
+    border-radius: var(--shape-lg);
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+    box-shadow: var(--elev-3);
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   6. Campos de formulario — outlined text field de M3
+   ========================================================================== */
+
+.input,
+textarea.input,
+select.input {
+    width: 100%;
+    min-height: 48px;
+    padding: var(--space-3) var(--space-4);
+    background: transparent;
+    color: var(--m3-on-surface);
+    border: 1px solid var(--m3-outline);
+    border-radius: var(--shape-xs);
+    font-family: inherit;
+    font-size: var(--type-body-lg-size);
+    line-height: var(--type-body-lg-line);
+    transition: border-color var(--dur-short) var(--ease-standard),
+        box-shadow var(--dur-short) var(--ease-standard);
+}
+
+.input::placeholder {
+    color: var(--m3-on-surface-muted);
+}
+
+.input:hover:not(:disabled) {
+    border-color: var(--m3-on-surface);
+}
+
+/* Al foco el borde pasa a 2px del color primario (M3 no usa halo). */
+.input:focus {
+    outline: none;
+    border-color: var(--m3-primary);
+    box-shadow: inset 0 0 0 1px var(--m3-primary);
+}
+
+.input:disabled {
+    color: color-mix(in srgb, var(--m3-on-surface) 38%, transparent);
+    border-color: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
+    cursor: not-allowed;
+}
+
+.input.is-invalid,
+.input[aria-invalid="true"] {
+    border-color: var(--m3-error);
+}
+
+.input.is-invalid:focus {
+    box-shadow: inset 0 0 0 1px var(--m3-error);
+}
+
+textarea.input {
+    min-height: 112px;
+    resize: vertical;
+}
+
+/* Select: la flecha se dibuja aquí para no depender del control nativo. */
+select.input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-inline-end: var(--space-8);
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right 22px center, right 16px center;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.field-label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-size: var(--type-body-sm-size);
+    line-height: var(--type-body-sm-line);
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    color: var(--m3-on-surface-variant);
+}
+
+.field-support {
+    margin-top: var(--space-1);
+    padding-inline: var(--space-4);
+    font-size: var(--type-body-sm-size);
+    line-height: var(--type-body-sm-line);
+    color: var(--m3-on-surface-variant);
+}
+
+.field-error,
+.errorlist,
+.text-danger {
+    margin-top: var(--space-1);
+    padding: 0;
+    list-style: none;
+    font-size: var(--type-body-sm-size);
+    line-height: var(--type-body-sm-line);
+    color: var(--m3-error);
+}
+
+.errorlist li+li {
+    margin-top: 2px;
+}
+
+/* --- Search bar (M3): radio full, sin borde, sobre surface-container ------ */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 56px;
+    padding-inline: var(--space-4);
+    background: var(--m3-surface-container-high);
+    border-radius: var(--shape-full);
+    color: var(--m3-on-surface-variant);
+    transition: background-color var(--dur-short) var(--ease-standard);
+}
+
+.search-bar:focus-within {
+    outline: 3px solid var(--m3-primary);
+    outline-offset: 2px;
+}
+
+.search-bar input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    outline: none;
+    color: var(--m3-on-surface);
+    font-family: inherit;
+    font-size: var(--type-body-lg-size);
+}
+
+.search-bar input::placeholder {
+    color: var(--m3-on-surface-variant);
+}
+
+/* --- Checkbox y radio: dibujados, iguales en todos los navegadores -------- */
+.checkbox,
+.radio {
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin: 3px;
+    border: 2px solid var(--m3-on-surface-variant);
+    background: transparent;
+    cursor: pointer;
+    display: inline-grid;
+    place-content: center;
+    transition: background-color var(--dur-short) var(--ease-standard),
+        border-color var(--dur-short) var(--ease-standard);
+}
+
+.checkbox {
+    border-radius: var(--shape-xs);
+}
+
+.radio {
+    border-radius: var(--shape-full);
+}
+
+.checkbox::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    transform: scale(0);
+    transition: transform var(--dur-short) var(--ease-decelerate);
+    background: var(--m3-on-primary);
+    clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 84% 0, 39% 62%);
+}
+
+.checkbox:checked {
+    background: var(--m3-primary);
+    border-color: var(--m3-primary);
+}
+
+.checkbox:checked::before {
+    transform: scale(1);
+}
+
+.radio::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: var(--shape-full);
+    background: var(--m3-primary);
+    transform: scale(0);
+    transition: transform var(--dur-short) var(--ease-decelerate);
+}
+
+.radio:checked {
+    border-color: var(--m3-primary);
+}
+
+.radio:checked::before {
+    transform: scale(1);
+}
+
+.checkbox:disabled,
+.radio:disabled {
+    border-color: color-mix(in srgb, var(--m3-on-surface) 38%, transparent);
+    cursor: not-allowed;
+}
+
+.checkbox:disabled:checked {
+    background: color-mix(in srgb, var(--m3-on-surface) 38%, transparent);
+}
+
+/* --- Switch (M3) --------------------------------------------------------- */
+.switch {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    width: 52px;
+    height: 32px;
+    border-radius: var(--shape-full);
+    border: 2px solid var(--m3-outline);
+    background: var(--m3-surface-container-highest);
+    cursor: pointer;
+    transition: background-color var(--dur-medium) var(--ease-standard),
+        border-color var(--dur-medium) var(--ease-standard);
+}
+
+.switch::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--shape-full);
+    background: var(--m3-outline);
+    transform: translateY(-50%);
+    transition: transform var(--dur-medium) var(--ease-emphasized),
+        width var(--dur-medium) var(--ease-emphasized),
+        height var(--dur-medium) var(--ease-emphasized),
+        background-color var(--dur-medium) var(--ease-standard);
+}
+
+.switch:checked {
+    background: var(--m3-primary);
+    border-color: var(--m3-primary);
+}
+
+.switch:checked::before {
+    width: 24px;
+    height: 24px;
+    left: 2px;
+    transform: translateY(-50%) translateX(20px);
+    background: var(--m3-on-primary);
+}
+
+/* --- Segmented button (M3) ----------------------------------------------- */
+.segmented {
+    display: inline-flex;
+    height: 40px;
+    border: 1px solid var(--m3-outline);
+    border-radius: var(--shape-full);
+    overflow: hidden;
+}
+
+.segmented__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding-inline: var(--space-4);
+    background: transparent;
+    border: 0;
+    color: var(--m3-on-surface);
+    font-family: inherit;
+    font-size: var(--type-label-lg-size);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--dur-short) var(--ease-standard),
+        color var(--dur-short) var(--ease-standard);
+}
+
+.segmented__item+.segmented__item {
+    border-left: 1px solid var(--m3-outline);
+}
+
+.segmented__item:hover {
+    background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+}
+
+.segmented__item[aria-selected="true"] {
+    background: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+}
+
+/* --- Zona de arrastre ----------------------------------------------------- */
+.dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 160px;
+    padding: var(--space-5);
+    text-align: center;
+    border: 1px dashed var(--m3-outline);
+    border-radius: var(--shape-md);
+    background: var(--m3-surface-container);
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    transition: background-color var(--dur-short) var(--ease-standard),
+        border-color var(--dur-short) var(--ease-standard);
+}
+
+.dropzone:hover {
+    border-color: var(--m3-primary);
+}
+
+.dropzone.is-dragover {
+    border-color: var(--m3-primary);
+    border-style: solid;
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+}
+
+/* --- Tarjeta seleccionable ------------------------------------------------
+   El patrón viejo era `peer` + `peer-checked:` sobre elementos que NO eran
+   hermanos del input: nunca aplicaba, así que marcar un destino de publicación
+   no daba ningún feedback. Con `:has()` el estilo lo decide el <label> padre,
+   que sí contiene al input. */
+.selectable {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 56px;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--shape-md);
+    background: var(--m3-surface-container-low);
+    color: var(--m3-on-surface);
+    cursor: pointer;
+    transition: background-color var(--dur-short) var(--ease-standard),
+        border-color var(--dur-short) var(--ease-standard);
+}
+
+.selectable:hover {
+    background: var(--m3-surface-container);
+}
+
+.selectable:has(input:checked) {
+    border-color: var(--m3-primary);
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+}
+
+.selectable:has(input:focus-visible) {
+    outline: 3px solid var(--m3-primary);
+    outline-offset: 2px;
+}
+
+.selectable:has(input:disabled) {
+    cursor: not-allowed;
+    color: color-mix(in srgb, var(--m3-on-surface) 38%, transparent);
+    background: var(--m3-surface);
+}
+
+/* --- File input ---------------------------------------------------------- */
+.file-input {
+    width: 100%;
+    font-family: inherit;
+    font-size: var(--type-body-size);
+    color: var(--m3-on-surface-variant);
+}
+
+.file-input::file-selector-button {
+    margin-inline-end: var(--space-4);
+    height: 40px;
+    padding-inline: var(--space-5);
+    border: 0;
+    border-radius: var(--shape-full);
+    background: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+    font-family: inherit;
+    font-size: var(--type-label-lg-size);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--dur-short) var(--ease-standard);
+}
+
+.file-input::file-selector-button:hover {
+    background: color-mix(in srgb, var(--m3-on-secondary-container) 8%, var(--m3-secondary-container));
+}
+
+/* ==========================================================================
+   7. Chips, badges, avatares
+   ========================================================================== */
+
+/* Filter chip de M3: 32px, radio 8, borde; seleccionado = secondary-container. */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 32px;
+    padding-inline: var(--space-4);
+    border: 1px solid var(--m3-outline);
+    border-radius: var(--shape-sm);
+    background: transparent;
+    color: var(--m3-on-surface-variant);
+    font-size: var(--type-label-lg-size);
+    line-height: var(--type-label-lg-line);
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur-short) var(--ease-standard),
+        border-color var(--dur-short) var(--ease-standard),
+        color var(--dur-short) var(--ease-standard);
+}
+
+.chip:hover {
+    background: color-mix(in srgb, var(--m3-on-surface-variant) 8%, transparent);
+    color: var(--m3-on-surface);
+}
+
+.chip[aria-selected="true"],
+.chip.is-selected {
+    background: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+    border-color: transparent;
+}
+
+.chip__count {
+    color: inherit;
+    opacity: 0.7;
+}
+
+/* Assist chip con icono a la izquierda (18px, el tamaño de M3 en chips). */
+.chip .material-symbols-outlined {
+    font-size: var(--icon-sm);
+}
+
+/* Badge de estado: pareja container / on-container. Nunca texto sobre color. */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 24px;
+    padding-inline: var(--space-2);
+    border-radius: var(--shape-sm);
+    font-size: var(--type-label-size);
+    line-height: var(--type-label-line);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.badge-success {
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+}
+
+.badge-warning {
+    background: var(--m3-warning-container);
+    color: var(--m3-on-warning-container);
+}
+
+.badge-info {
+    background: var(--m3-info-container);
+    color: var(--m3-on-info-container);
+}
+
+.badge-violet {
+    background: var(--m3-violet-container);
+    color: var(--m3-on-violet-container);
+}
+
+.badge-danger {
+    background: var(--m3-error-container);
+    color: var(--m3-on-error-container);
+}
+
+.badge-neutral {
+    background: var(--m3-surface-container-high);
+    color: var(--m3-on-surface-variant);
+}
+
+.badge-brand {
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+}
+
+/* Puntos de estado */
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--shape-full);
+    flex-shrink: 0;
+}
+
+.dot-success,
+.dot-brand {
+    background: var(--m3-primary);
+}
+
+.dot-warning {
+    background: var(--m3-warning);
+}
+
+.dot-info {
+    background: var(--m3-info);
+}
+
+.dot-violet {
+    background: var(--m3-violet);
+}
+
+.dot-danger {
+    background: var(--m3-error);
+}
+
+.dot-neutral {
+    background: var(--m3-on-surface-muted);
+}
+
+/* Avatar — con fallback de inicial: una imagen rota no deja hueco. */
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--shape-full);
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+    font-size: var(--type-label-lg-size);
+    font-weight: 500;
+    overflow: hidden;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar--sm {
+    width: 24px;
+    height: 24px;
+    font-size: var(--type-label-sm-size);
+}
+
+/* Contenedor de logotipo de red social: forma y tamaño únicos en toda la app. */
+.net-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--shape-full);
+    background: var(--m3-surface-container-high);
+}
+
+.net-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.net-icon--sm {
+    width: 32px;
+    height: 32px;
+}
+
+.net-icon--sm svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ==========================================================================
+   8. Listas
+   --------------------------------------------------------------------------
+   Una superficie con filas separadas por divisores. No 10 tarjetas apiladas.
+   ========================================================================== */
+
+.list {
+    background: var(--m3-surface-container-low);
+    border-radius: var(--shape-lg);
+    overflow: hidden;
+}
+
+.list-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: 72px;
+    padding: var(--space-3) var(--space-4);
+    color: var(--m3-on-surface);
+    text-decoration: none;
+    transition: background-color var(--dur-short) var(--ease-standard);
+}
+
+/* El divisor solo aplica DENTRO de una `.list`. Las filas sueltas (p. ej. las
+   tarjetas de cuentas del panel, separadas por `gap`) no deben llevar línea:
+   quedaba un filete cruzando por encima de las esquinas redondeadas. */
+.list>.list-item+.list-item {
+    box-shadow: inset 0 1px 0 var(--m3-outline-variant);
+}
+
+/* Fila que apila contenido bajo la línea principal (p. ej. el detalle del
+   error de una publicación, que debe vivir dentro del nodo que HTMX refresca). */
+.list-item--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+}
+
+.list-item--interactive:hover {
+    background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+}
+
+.list-item__headline {
+    font-size: var(--type-body-lg-size);
+    line-height: var(--type-body-lg-line);
+    font-weight: 400;
+    color: var(--m3-on-surface);
+}
+
+.list-item__supporting {
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
+    color: var(--m3-on-surface-variant);
+}
+
+/* ==========================================================================
+   9. Progreso y skeletons
+   ========================================================================== */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Indicador circular de M3: un solo spinner para toda la app. */
+.spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid color-mix(in srgb, var(--m3-primary) 24%, transparent);
+    border-top-color: var(--m3-primary);
+    border-radius: var(--shape-full);
+    animation: spin 900ms linear infinite;
+}
+
+.spinner--sm {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+}
+
+/* Barra de progreso lineal, determinada o indeterminada. */
+.progress {
+    position: relative;
+    height: 4px;
+    width: 100%;
+    border-radius: var(--shape-full);
+    background: var(--m3-secondary-container);
+    overflow: hidden;
+}
+
+.progress__value {
+    height: 100%;
+    border-radius: var(--shape-full);
+    background: var(--m3-primary);
+    transition: width var(--dur-long) var(--ease-standard);
+}
+
+.progress--indeterminate .progress__value {
+    width: 40%;
+    animation: progress-slide 1.6s var(--ease-standard) infinite;
+}
+
+@keyframes progress-slide {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(250%);
+    }
+}
+
+/* --- Stepper -------------------------------------------------------------
+   El estado se declara con `is-done` / `is-active` en el <li>; el color lo
+   decide el sistema. Antes cada paso escupía su propia clase de color de
+   Tailwind y convivían seis familias distintas en el mismo componente. */
+.stepper {
+    display: flex;
+    align-items: flex-start;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.stepper__step {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    text-align: center;
+    color: var(--m3-on-surface-muted);
+}
+
+/* Conector: nace del marcador anterior, no de debajo del texto. */
+.stepper__step+.stepper__step::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    right: 50%;
+    left: -50%;
+    height: 2px;
+    background: var(--m3-outline-variant);
+    z-index: 0;
+}
+
+/* Solo se pinta el tramo YA recorrido: si el paso anterior está en curso, el
+   conector sigue apagado. Pintarlo prometía un avance que no ocurrió. */
+.stepper__step.is-done+.stepper__step::before {
+    background: var(--m3-primary);
+}
+
+.stepper__marker {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--shape-full);
+    background: var(--m3-surface-container-high);
+    color: var(--m3-on-surface-variant);
+    transition: background-color var(--dur-medium) var(--ease-standard),
+        color var(--dur-medium) var(--ease-standard);
+}
+
+.stepper__label {
+    font-size: var(--type-body-sm-size);
+    line-height: var(--type-body-sm-line);
+    max-width: 12ch;
+}
+
+.stepper__step.is-done .stepper__marker {
+    background: var(--m3-primary);
+    color: var(--m3-on-primary);
+}
+
+.stepper__step.is-done .stepper__label {
+    color: var(--m3-on-surface-variant);
+}
+
+.stepper__step.is-active .stepper__marker {
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--m3-primary) 20%, transparent);
+}
+
+.stepper__step.is-active .stepper__label {
+    color: var(--m3-on-surface);
+}
+
+/* --- Checklist de pasos del worker --------------------------------------- */
+.step-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--shape-md);
+    color: var(--m3-on-surface-muted);
+    font-size: var(--type-body-size);
+}
+
+.step-row.is-active {
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+}
+
+.step-row.is-done {
+    color: var(--m3-on-surface-variant);
+}
+
+.step-row__marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: var(--shape-full);
+    background: var(--m3-surface-container-high);
+    color: inherit;
+}
+
+.step-row.is-done .step-row__marker {
+    background: var(--m3-primary);
+    color: var(--m3-on-primary);
+}
+
+.step-row.is-active .step-row__marker {
+    background: transparent;
+}
+
+/* Indicador de petición de HTMX.
+   HTMX NO trae CSS: solo pone la clase `htmx-request` en el elemento que
+   dispara. Como aquí nunca se definió `.htmx-indicator`, el overlay
+   "Sincronizando…" del editor se dejaba oculto con la utilidad `hidden` de
+   Tailwind y por tanto NO se mostraba jamás. */
+.htmx-indicator {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur-medium) var(--ease-standard);
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    opacity: 1;
+    visibility: visible;
+}
+
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--m3-surface-container-high);
+    border-radius: var(--shape-sm);
+}
+
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--m3-on-surface) 8%, transparent), transparent);
+    animation: shimmer 1.6s infinite;
+    transform: translateX(-100%);
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ==========================================================================
+   10. Overlays
+   ========================================================================== */
+
+/* Snackbar de M3 — UN solo sistema de notificación en toda la app. */
+.snackbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 48px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--shape-xs);
+    background: var(--m3-inverse-surface);
+    color: var(--m3-inverse-on-surface);
+    box-shadow: var(--elev-3);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
+    transition: opacity var(--dur-long) var(--ease-standard),
+        transform var(--dur-long) var(--ease-emphasized);
+}
+
+.snackbar__action {
+    margin-inline-start: auto;
+    flex-shrink: 0;
+    background: none;
+    border: 0;
+    padding: var(--space-2);
+    color: var(--m3-inverse-primary);
+    font-family: inherit;
+    font-size: var(--type-label-lg-size);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.snackbar--danger .snackbar__action {
+    color: var(--m3-error-container);
+}
+
+.scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: color-mix(in srgb, var(--m3-scrim) 32%, transparent);
+}
+
+.dialog {
+    background: var(--m3-surface-container-high);
+    color: var(--m3-on-surface);
+    border-radius: var(--shape-xl);
+    box-shadow: var(--elev-3);
+    padding: var(--space-5);
+    max-width: 560px;
+    width: calc(100% - var(--space-8));
+}
+
+.menu {
+    background: var(--m3-surface-container);
+    border-radius: var(--shape-xs);
+    box-shadow: var(--elev-2);
+    padding-block: var(--space-1);
+    min-width: 112px;
+}
+
+.menu__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 48px;
+    padding-inline: var(--space-3);
+    color: var(--m3-on-surface);
+    font-size: var(--type-label-lg-size);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu__item:hover {
+    background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+}
+
+/* Banner de aviso — reemplaza los `.badge` estirados que se usaban como alerta. */
+.banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--shape-md);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
+}
+
+.banner--warning {
+    background: var(--m3-warning-container);
+    color: var(--m3-on-warning-container);
+}
+
+.banner--danger {
+    background: var(--m3-error-container);
+    color: var(--m3-on-error-container);
+}
+
+.banner--info {
+    background: var(--m3-info-container);
+    color: var(--m3-on-info-container);
+}
+
+.banner--success {
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+}
+
+.banner a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   11. Iconografía — Material Symbols Outlined, un solo set
+   ========================================================================== */
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: var(--icon-lg);
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+/* Solo 3 tamaños. Si hace falta otro, es que el componente está mal. */
+.icon-md {
+    font-size: var(--icon-md);
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.icon-sm {
+    font-size: var(--icon-sm);
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.icon-filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ==========================================================================
+   12. Utilidades
+   ========================================================================== */
+
+.link {
+    color: var(--m3-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Estado vacío: icono en contenedor tonal + copy útil + acción. */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-block: var(--space-8);
+    gap: var(--space-4);
+}
+
+.empty-state__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: var(--shape-full);
+    background: var(--m3-surface-container-high);
+    color: var(--m3-on-surface-variant);
+}
+
+.empty-state__icon .material-symbols-outlined {
+    font-size: 36px;
+}
+
+.truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Entrada suave. NO se usa en nodos que HTMX refresca por polling: se
+   reiniciaría cada 5 s (ver `_publication_card.html`). */
+.fade-in-up {
+    animation: fadeInUp var(--dur-xlong) var(--ease-decelerate) forwards;
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.delay-100 {
+    animation-delay: 50ms;
+}
+
+.delay-200 {
+    animation-delay: 100ms;
+}
+
+.delay-300 {
+    animation-delay: 150ms;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Documento legal */
+.prose-doc h2 {
+    font-size: var(--type-title-lg-size);
+    line-height: var(--type-title-lg-line);
+    font-weight: 400;
+    color: var(--m3-on-surface);
+    margin-bottom: var(--space-3);
+}
+
+.prose-doc p,
+.prose-doc li {
+    color: var(--m3-on-surface-variant);
+    line-height: 1.7;
+    font-size: var(--type-body-lg-size);
+}
+
+.prose-doc ul,
+.prose-doc ol {
+    padding-left: var(--space-5);
+    margin-top: var(--space-2);
+}
+
+.prose-doc ul {
+    list-style: disc;
+}
+
+.prose-doc ol {
+    list-style: decimal;
+}
+
+.prose-doc li::marker {
+    color: var(--m3-primary);
+}
+
+.prose-doc section+section {
+    margin-top: var(--space-6);
+}
+
+.prose-doc .callout {
+    background: var(--m3-surface-container);
+    border-left: 3px solid var(--m3-primary);
+    border-radius: var(--shape-sm);
+    padding: var(--space-4);
+    font-size: var(--type-body-size);
+    margin-top: var(--space-4);
+}
+
+/* ==========================================================================
+   13. LEGADO DEL LANDING
+   --------------------------------------------------------------------------
+   `pages/welcome.html` está FUERA de alcance (identidad de marketing + está
+   atado a la verificación de marca de Google). Estas clases se conservan tal
+   cual para no romperlo; el panel ya no las usa.
+   PROHIBIDO usarlas en /dashboard/*.
+   ========================================================================== */
+
+.bg-tech-grid {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1h2v2H1V1z' fill='%23cbd5e1' fill-opacity='0.35'/%3E%3C/svg%3E");
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 100%);
+    pointer-events: none;
+}
+
+.dark .bg-tech-grid {
+    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1h2v2H1V1z' fill='%23334155' fill-opacity='0.45'/%3E%3C/svg%3E");
+}
+
+.blob {
+    position: fixed;
+    border-radius: var(--shape-full);
+    filter: blur(110px);
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+    animation: blob-float 14s ease-in-out infinite alternate;
+}
+
+.blob-1 {
+    top: -10%;
+    left: 50%;
+    width: 720px;
+    height: 480px;
+    --tx: -50%;
+    transform: translateX(-50%);
+    background: color-mix(in srgb, var(--m3-primary) 22%, transparent);
+}
+
+.blob-2 {
+    top: 30%;
+    left: -12%;
+    width: 460px;
+    height: 420px;
+    background: color-mix(in srgb, var(--m3-tertiary) 16%, transparent);
+    animation-delay: -5s;
+}
+
+.blob-3 {
+    top: 55%;
+    right: -12%;
+    width: 460px;
+    height: 440px;
+    background: color-mix(in srgb, var(--m3-violet) 14%, transparent);
+    animation-delay: -9s;
+}
+
+@keyframes blob-float {
+    from {
+        transform: translateY(0) translateX(var(--tx, 0)) scale(1);
+    }
+
+    to {
+        transform: translateY(40px) translateX(var(--tx, 0)) scale(1.12);
+    }
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, var(--p-50), var(--t-40), var(--v-40), var(--p-50));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-slide 6s linear infinite;
+}
+
+.dark .gradient-text {
+    background: linear-gradient(90deg, var(--p-80), var(--t-80), var(--v-80), var(--p-80));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+@keyframes gradient-slide {
+    to {
+        background-position: 300% 0;
+    }
+}
+
+.btn-shine {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -80%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.30), transparent);
+    transform: skewX(-20deg);
+    animation: shine-sweep 3.2s ease-in-out infinite;
+    z-index: 2;
+}
+
+@keyframes shine-sweep {
+
+    0%,
+    60% {
+        left: -80%;
+    }
+
+    100% {
+        left: 130%;
+    }
+}
+
+.glow-card {
+    position: relative;
+}
+
+.glow-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--m3-primary) 55%, transparent), color-mix(in srgb, var(--m3-tertiary) 40%, transparent), color-mix(in srgb, var(--m3-violet) 40%, transparent));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity var(--dur-long) var(--ease-standard);
+    pointer-events: none;
+}
+
+.glow-card:hover::before {
+    opacity: 1;
+}
+
+.reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s var(--ease-decelerate), transform 0.7s var(--ease-decelerate);
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* Isla de navegación del landing. El panel usa `.app-topbar` + `.nav-rail`. */
+.nav-island {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    border-radius: var(--shape-full);
+    max-width: calc(100vw - 24px);
+    background: color-mix(in srgb, var(--m3-surface-container) 75%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.7);
+    backdrop-filter: blur(20px) saturate(1.7);
+    border: 1px solid var(--m3-outline-variant);
+    transition: background-color var(--dur-long) var(--ease-standard);
+}
+
+.nav-island.scrolled {
+    background: color-mix(in srgb, var(--m3-surface-container-high) 90%, transparent);
+}
+
+.nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: var(--shape-full);
+    font-size: var(--type-label-lg-size);
+    font-weight: 500;
+    color: var(--m3-on-surface-variant);
+    white-space: nowrap;
+    transition: background-color var(--dur-short) var(--ease-standard), color var(--dur-short) var(--ease-standard);
+    min-height: 40px;
+}
+
+.nav-pill:hover {
+    background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+    color: var(--m3-on-surface);
+}
+
+.nav-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: var(--shape-full);
+    font-size: var(--type-label-lg-size);
+    font-weight: 500;
+    color: var(--m3-on-primary);
+    background: var(--m3-primary);
+    white-space: nowrap;
+    min-height: 40px;
+    transition: background-color var(--dur-short) var(--ease-standard);
+}
+
+.nav-divider {
+    width: 1px;
+    height: 22px;
+    background: var(--m3-outline-variant);
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+.nav-island .theme-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--shape-full);
+}
+
+/* Solo el landing. En el panel el hover NO levanta el elemento (ver `.card--interactive`). */
+.card-hover {
+    transition: background-color var(--dur-medium) var(--ease-standard),
+        transform var(--dur-medium) var(--ease-standard),
+        box-shadow var(--dur-medium) var(--ease-standard);
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--elev-2);
+}
+
+.glass-nav {
+    background: color-mix(in srgb, var(--m3-surface-container) 70%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    backdrop-filter: blur(20px) saturate(1.6);
+    border-bottom: 1px solid var(--m3-outline-variant);
+    transition: background-color var(--dur-long) var(--ease-standard);
+}
+
+/* ==========================================================================
+   Movimiento reducido — cubre TODO lo que se mueve, incluidas las clases de
+   animación de Tailwind (`animate-pulse/ping/spin/bounce`), que antes se
+   escapaban de esta regla.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .blob,
+    .gradient-text,
+    .btn-shine::before {
+        animation: none !important;
+    }
+
+    /* Sin animación, lo que nace en opacity 0 debe nacer visible. */
+    .reveal,
+    .fade-in-up {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}

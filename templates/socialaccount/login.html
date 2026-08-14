@@ -1,0 +1,46 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load allauth %}
+{% load static %}
+
+{% block head_title %}
+    {% if process == "connect" %}{% trans "Conectar Cuenta" %}{% else %}{% trans "Iniciar Sesión" %}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-sm w-full fade-in-up">
+    <div class="card p-6 sm:p-8 text-center">
+
+        <img src="{% static 'publications/logo.png' %}" alt="Logo Propaga"
+            class="w-16 h-16 mx-auto rounded-shape-md object-cover mb-6">
+
+        <h1 class="text-headline mb-2">
+            {% if process == "connect" %}
+                {% blocktrans with provider.name as provider %}Conectar con {{ provider }}{% endblocktrans %}
+            {% else %}
+                {% blocktrans with provider.name as provider %}Iniciar sesión con {{ provider }}{% endblocktrans %}
+            {% endif %}
+        </h1>
+
+        <p class="text-body text-on-surface-variant mb-6">
+            {% if process == "connect" %}
+                {% blocktrans with provider.name as provider %}Vas a conectar una cuenta de {{ provider }} a tu perfil de Propaga.{% endblocktrans %}
+            {% else %}
+                {% blocktrans with provider.name as provider %}Confirma que quieres iniciar sesión con tu cuenta de {{ provider }}.{% endblocktrans %}
+            {% endif %}
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary w-full mb-4">
+                {% trans "Continuar" %}
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_forward</span>
+            </button>
+            <a href="{% url 'publications:dashboard' %}" class="link text-body">
+                Cancelar y volver al panel
+            </a>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

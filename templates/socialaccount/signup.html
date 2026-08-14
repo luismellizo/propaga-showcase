@@ -1,0 +1,71 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}Completar registro{% endblock %}
+
+{% block content %}
+<div class="max-w-sm w-full fade-in-up">
+    <div class="card p-6 sm:p-8">
+
+        <div class="empty-state__icon mx-auto mb-6">
+            <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
+        </div>
+
+        <h1 class="text-headline mb-2 text-center">Un paso más</h1>
+        <p class="text-body text-on-surface-variant mb-6 text-center">
+            Vas a entrar a Propaga con tu cuenta de
+            <strong>{{ account.get_provider.name|default:"tu red social" }}</strong>.
+            Elige un nombre de usuario para terminar.
+        </p>
+
+        <form method="post" action="{% url 'socialaccount_signup' %}">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="banner banner--danger mb-6" role="alert">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">error</span>
+                <div>
+                    {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% for field in form %}
+            <div class="mb-4">
+                <label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <p class="field-support">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                <ul class="field-error">
+                    {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary w-full mt-2">
+                <span class="material-symbols-outlined icon-md" aria-hidden="true">check_circle</span>
+                Crear mi cuenta
+            </button>
+        </form>
+
+        {% comment %}
+        Salida para quien YA tiene cuenta: completar este formulario crearía una
+        cuenta nueva en vez de conectar la red social a la existente.
+        {% endcomment %}
+        <p class="text-label text-on-surface-muted mt-6 text-center">
+            ¿Ya tienes cuenta en Propaga?
+            <a href="{% url 'account_login' %}" class="link">Inicia sesión</a>
+            y conecta esta red desde <em>Conectar Cuentas</em>.
+        </p>
+    </div>
+</div>
+{% endblock %}

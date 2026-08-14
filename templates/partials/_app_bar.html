@@ -1,0 +1,34 @@
+{% load static %}
+{% comment %}
+Top app bar de M3 (64px). Plana sobre `surface`; al hacer scroll theme.js le
+pone `.scrolled` y sube a `surface-container` — la elevación en M3 es TONO, no
+sombra.
+
+Uso:  {% include "partials/_app_bar.html" with title="Panel" %}
+      {% include "partials/_app_bar.html" with title="Editar" back_url=algo back_label="Volver al panel" %}
+
+El logotipo y las acciones de cuenta solo se pintan en móvil: en escritorio ya
+viven en el navigation rail y repetirlos sería ruido.
+{% endcomment %}
+
+<header class="app-topbar" id="app-topbar">
+    {% if back_url %}
+    <a href="{{ back_url }}" class="icon-btn" aria-label="{{ back_label|default:'Volver' }}"
+        title="{{ back_label|default:'Volver' }}">
+        <span class="material-symbols-outlined icon-md" aria-hidden="true">arrow_back</span>
+    </a>
+    {% else %}
+    <a href="{% url 'publications:dashboard' %}" class="flex items-center px-2 lg:hidden" aria-label="Propaga">
+        <img src="{% static 'publications/logo.png' %}" alt="" class="h-8 w-8 rounded-shape-sm object-cover">
+    </a>
+    {% endif %}
+
+    <h1 class="app-topbar__title">{{ title }}</h1>
+
+    <div class="ml-auto flex items-center gap-1 lg:hidden">
+        {% include "partials/_theme_toggle.html" %}
+        <a href="{% url 'account_logout' %}" class="icon-btn" title="Cerrar sesión" aria-label="Cerrar sesión">
+            <span class="material-symbols-outlined icon-md" aria-hidden="true">logout</span>
+        </a>
+    </div>
+</header>

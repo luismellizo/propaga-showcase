@@ -1,0 +1,142 @@
+# =============================================================================
+# PROPAGA — topología de servicios
+# =============================================================================
+# Cuatro procesos sobre la MISMA imagen, diferenciados por PROPAGA_ROLE
+# (ver scripts/entrypoint.sh):
+#
+#   web     Django + Gunicorn. Responde HTTP. Nunca toca ffmpeg ni sube videos.
+#   worker  Celery. Descarga, transcodifica, transcribe y publica. Todo lo lento.
+#   beat    Celery beat. Tareas programadas.
+#   redis   Broker de Celery (DB 0) + caché y locks de Django (DB 1).
+#   db      PostgreSQL.
+#
+# El corte entre web y worker es la decisión estructural del sistema: procesar
+# un video son minutos de CPU y de red, y un request HTTP no puede sostener eso.
+# El usuario sube una URL, recibe respuesta inmediata, y ve el progreso porque
+# el worker escribe cada sub-paso en la fila de `Publication`.
+#
+# En producción esto corre en Coolify con Postgres y Redis como servicios
+# gestionados aparte; este archivo describe la topología completa en un solo
+# lugar. Ver LICENSE: el snapshot NO es desplegable, faltan credenciales.
+# =============================================================================
+
+x-django-env: &django-env
+  SECRET_KEY: ${SECRET_KEY}
+  DEBUG: ${DEBUG:-False}
+  DJANGO_SETTINGS_MODULE: config.settings
+  DB_NAME: ${DB_NAME:-propaga}
+  DB_USER: ${DB_USER:-propaga}
+  DB_PASSWORD: ${DB_PASSWORD}
+  DB_HOST: ${DB_HOST:-db}
+  DB_PORT: ${DB_PORT:-5432}
+  CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+  CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+  GEMINI_API_KEY: ${GEMINI_API_KEY}
+  GROQ_API_KEY: ${GROQ_API_KEY:-}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
+  CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+
+services:
+  # ---------------------------------------------------------------------------
+  # Web — Django + Gunicorn
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment: *django-env
+    volumes:
+      - static_files:/app/staticfiles
+      - media_files:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # ---------------------------------------------------------------------------
+  # Worker — Celery. Aquí vive ffmpeg, yt-dlp y toda subida a redes sociales.
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *django-env
+      PROPAGA_ROLE: celery-worker
+    volumes:
+      # El worker comparte MEDIA_ROOT con web: la API de Reels de Instagram no
+      # acepta upload de archivo, descarga el video desde una URL pública, así
+      # que el worker tiene que poder escribir en el mismo volumen que sirve web.
+      - media_files:/app/media
+    depends_on:
+      - db
+      - redis
+    healthcheck:
+      # Un worker de Celery no escucha ningún puerto: preguntarle por HTTP lo
+      # marcaría unhealthy siempre. Se le pregunta al propio Celery vía broker.
+      test: ["CMD", "celery", "-A", "config", "inspect", "ping", "-t", "10"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # Beat — scheduler de tareas periódicas
+  # ---------------------------------------------------------------------------
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *django-env
+      PROPAGA_ROLE: celery-beat
+    depends_on:
+      - redis
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-propaga}
+      POSTGRES_USER: ${DB_USER:-propaga}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-propaga}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Redis — broker (DB 0) y caché/locks de Django (DB 1)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  static_files:
+  media_files:
+  pg_data:
+  redis_data:

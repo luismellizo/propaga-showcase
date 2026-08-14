@@ -1,0 +1,23 @@
+{% extends "admin/change_form.html" %}
+
+{# Botón de ejecución del test.
+
+   Va dentro del formulario del admin, así que el {% csrf_token %} que Django
+   ya renderiza cubre este submit. Es un POST con nombre `_run_test`, que
+   `TestResultAdmin.change_view` intercepta antes de la validación del form.
+
+   Existe como template y no como HTML inyectado desde list_display porque un
+   botón que ejecuta procesos necesita un token CSRF real, y el patrón de
+   guardar el request en el ModelAdmin para conseguirlo no es seguro: la
+   instancia de ModelAdmin es compartida entre requests. #}
+
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+  {% if original %}
+    <div class="submit-row">
+      <button type="submit" name="_run_test" value="1" class="button">
+        Correr test
+      </button>
+    </div>
+  {% endif %}
+{% endblock %}

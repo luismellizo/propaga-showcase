@@ -1,0 +1,22 @@
+/* Ajustes visuales para django-unfold (admin PROPAGA) */
+
+/* Login: tarjeta del formulario con más aire y bordes suaves */
+#page-login form {
+    border-radius: 1rem;
+}
+
+#page-login input[type="text"],
+#page-login input[type="password"] {
+    border-radius: 0.75rem !important;
+}
+
+#page-login button[type="submit"] {
+    border-radius: 0.75rem !important;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: filter 0.2s ease;
+}
+
+#page-login button[type="submit"]:hover {
+    filter: brightness(1.1);
+}

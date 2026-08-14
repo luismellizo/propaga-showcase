@@ -1,0 +1,64 @@
+{% load static %}
+{% comment %}
+Navegación del panel — un solo origen para las dos formas de M3:
+
+  · escritorio (≥1024px) → navigation rail fijo a la izquierda (88px)
+  · móvil/tablet         → navigation bar fija abajo (80px)
+
+Uso:  {% include "partials/_app_nav.html" with active="dashboard" %}
+`active` ∈ dashboard | conexiones | ia
+
+El destino activo se marca con `aria-current="page"`: el indicador visual (la
+píldora de secondary-container) sale de ese atributo, así que el estado visible
+y el estado anunciado por el lector de pantalla no se pueden desincronizar.
+{% endcomment %}
+
+<nav class="nav-rail" aria-label="Navegación principal">
+    <a href="{% url 'publications:dashboard' %}" class="nav-rail__brand state-layer" aria-label="Propaga — inicio">
+        <img src="{% static 'publications/logo.png' %}" alt="" class="h-9 w-9 rounded-shape-md object-cover">
+    </a>
+
+    <a href="{% url 'publications:dashboard' %}" class="nav-item"
+        {% if active == 'dashboard' %}aria-current="page"{% endif %}>
+        <span class="nav-item__indicator"><span class="material-symbols-outlined {% if active == 'dashboard' %}icon-filled{% endif %}" aria-hidden="true">home</span></span>
+        <span class="nav-item__label">Panel</span>
+    </a>
+
+    <a href="{% url 'socialaccount_connections' %}" class="nav-item"
+        {% if active == 'conexiones' %}aria-current="page"{% endif %}>
+        <span class="nav-item__indicator"><span class="material-symbols-outlined {% if active == 'conexiones' %}icon-filled{% endif %}" aria-hidden="true">cable</span></span>
+        <span class="nav-item__label">Conexiones</span>
+    </a>
+
+    <a href="{% url 'publications:ai_config' %}" class="nav-item"
+        {% if active == 'ia' %}aria-current="page"{% endif %}>
+        <span class="nav-item__indicator"><span class="material-symbols-outlined {% if active == 'ia' %}icon-filled{% endif %}" aria-hidden="true">auto_awesome</span></span>
+        <span class="nav-item__label">IA</span>
+    </a>
+
+    <span class="nav-rail__spacer"></span>
+
+    {% include "partials/_theme_toggle.html" %}
+
+    <a href="{% url 'account_logout' %}" class="icon-btn" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <span class="material-symbols-outlined icon-md" aria-hidden="true">logout</span>
+    </a>
+</nav>
+
+<nav class="nav-bar" aria-label="Navegación principal">
+    <a href="{% url 'publications:dashboard' %}" class="nav-item"
+        {% if active == 'dashboard' %}aria-current="page"{% endif %}>
+        <span class="nav-item__indicator"><span class="material-symbols-outlined {% if active == 'dashboard' %}icon-filled{% endif %}" aria-hidden="true">home</span></span>
+        <span class="nav-item__label">Panel</span>
+    </a>
+    <a href="{% url 'socialaccount_connections' %}" class="nav-item"
+        {% if active == 'conexiones' %}aria-current="page"{% endif %}>
+        <span class="nav-item__indicator"><span class="material-symbols-outlined {% if active == 'conexiones' %}icon-filled{% endif %}" aria-hidden="true">cable</span></span>
+        <span class="nav-item__label">Conexiones</span>
+    </a>
+    <a href="{% url 'publications:ai_config' %}" class="nav-item"
+        {% if active == 'ia' %}aria-current="page"{% endif %}>
+        <span class="nav-item__indicator"><span class="material-symbols-outlined {% if active == 'ia' %}icon-filled{% endif %}" aria-hidden="true">auto_awesome</span></span>
+        <span class="nav-item__label">IA</span>
+    </a>
+</nav>
